@@ -1,4 +1,4 @@
-package com.steppschuh.mirrordashboard;
+package com.steppschuh.mirrordashboard.request;
 
 import android.os.Build;
 import android.util.Log;
