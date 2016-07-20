@@ -4,15 +4,22 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 
+import com.steppschuh.mirrordashboard.content.Content;
+import com.steppschuh.mirrordashboard.content.ContentManager;
+import com.steppschuh.mirrordashboard.content.ContentUpdateListener;
+import com.steppschuh.mirrordashboard.content.weather.Weather;
+import com.steppschuh.mirrordashboard.content.weather.YahooWeather;
 import com.steppschuh.mirrordashboard.request.SlackLog;
 
-public class DashboardActivity extends AppCompatActivity {
+public class DashboardActivity extends AppCompatActivity implements ContentUpdateListener {
 
     private static final String TAG = DashboardActivity.class.getSimpleName();
 
+    private ContentManager contentManager;
     private View decorView;
 
     @Override
@@ -21,6 +28,7 @@ public class DashboardActivity extends AppCompatActivity {
         setContentView(R.layout.main);
 
         setupUi();
+        setupContent();
         //maximizeScreenBrightness();
         //logAppStart();
     }
@@ -31,8 +39,47 @@ public class DashboardActivity extends AppCompatActivity {
         hideSystemUI();
     }
 
+    @Override
+    protected void onDestroy() {
+        contentManager.unregisterContentUpdateListener(this);
+        contentManager.stopAllContentUpdaters();
+        super.onDestroy();
+    }
+
     private void setupUi() {
         decorView = getWindow().getDecorView();
+    }
+
+    private void setupContent() {
+        contentManager = new ContentManager();
+        contentManager.registerContentUpdateListener(this);
+
+        YahooWeather yahooWeather = new YahooWeather(YahooWeather.WOEID_POTSDAM, YahooWeather.UNIT_CELSIUS);
+        contentManager.addContentUpdater(yahooWeather);
+
+        contentManager.startAllContentUpdaters();
+    }
+
+    @Override
+    public void onContentUpdated(Content content) {
+        switch (content.getType()) {
+            case Content.TYPE_WEATHER: {
+                renderWeather((Weather) content);
+                break;
+            }
+            default: {
+                Log.w(TAG, "Unable to render content, type unknown: " + content.getType());
+            }
+        }
+    }
+
+    @Override
+    public void onContentUpdateFailed(Exception exception) {
+        SlackLog.e(TAG, exception);
+    }
+
+    private void renderWeather(Weather weather) {
+        Log.d(TAG, "Weather updated: " + weather);
     }
 
     private void hideSystemUI() {
@@ -68,5 +115,6 @@ public class DashboardActivity extends AppCompatActivity {
             SlackLog.e(TAG, e);
         }
     }
+
 
 }

@@ -23,7 +23,18 @@ public final class RequestHelper {
     private static final MakerChannelTrigger makerChannelTrigger = new MakerChannelTrigger(MAKER_CHANNEL_KEY);
     private static Webhook slackWebhook = new Webhook(SLACK_WEBHOOK_URL);
 
-    public static String postJsonRequest(String url, String data) throws Exception {
+    public static String get(String url) throws Exception {
+        HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
+        con.connect();
+
+        if (con.getResponseCode() == HttpURLConnection.HTTP_OK) {
+            return readStreamToString(con.getInputStream());
+        } else {
+            throw new Exception(readStreamToString(con.getErrorStream()));
+        }
+    }
+
+    public static String post(String url, String data) throws Exception {
         boolean success = false;
         String response = null;
 
