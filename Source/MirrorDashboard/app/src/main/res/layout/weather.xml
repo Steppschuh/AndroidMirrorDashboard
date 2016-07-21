@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:id="@+id/weatherTemperature"
+        android:text="10°"
+        style="@style/Base.TextAppearance.AppCompat.Display4"
+        android:textColor="@android:color/white"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:id="@+id/weatherCondition"
+        android:text="currently sunny\nlater cloudy"
+        android:gravity="center|left"
+        android:textSize="30sp"
+        android:textColor="@android:color/white"
+        android:layout_alignTop="@id/weatherTemperature"
+        android:layout_alignBottom="@id/weatherTemperature"
+        android:layout_toRightOf="@id/weatherTemperature"
+        android:layout_marginLeft="20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="@style/Base.TextAppearance.AppCompat.Display1" />
+
+    <ImageView
+        android:id="@+id/weatherConditionIcon"
+        android:src="@drawable/weather_cloud_day"
+        android:layout_alignBottom="@id/weatherTemperature"
+        android:layout_alignTop="@id/weatherTemperature"
+        android:layout_alignParentRight="true"
+        android:tint="@android:color/white"
+        android:layout_width="150dp"
+        android:layout_height="match_parent" />
+
+</RelativeLayout>

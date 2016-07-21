@@ -21,7 +21,7 @@ public class Weather extends Content {
     @Override
     public String toString() {
         return new StringBuilder(getReadableTemperature())
-                .append(" ").append(condition)
+                .append(" - ").append(condition)
                 .toString();
     }
 
@@ -29,8 +29,12 @@ public class Weather extends Content {
         return getReadableTemperature(temperature, unit);
     }
 
+    public static String getReadableTemperature(int temperature) {
+        return temperature + "°";
+    }
+
     public static String getReadableTemperature(int temperature, String unit) {
-        return temperature + "°" + unit;
+        return getReadableTemperature(temperature) + unit;
     }
 
     public int getTemperature() {
