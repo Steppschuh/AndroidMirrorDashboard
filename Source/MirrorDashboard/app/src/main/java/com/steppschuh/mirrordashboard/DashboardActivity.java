@@ -29,8 +29,8 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
 
         setupUi();
         setupContent();
-        //maximizeScreenBrightness();
-        //logAppStart();
+        maximizeScreenBrightness();
+        logAppStart();
     }
 
     @Override
@@ -41,6 +41,7 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
 
     @Override
     protected void onDestroy() {
+        SlackLog.w(TAG, "App closing :pensive:");
         contentManager.unregisterContentUpdateListener(this);
         contentManager.stopAllContentUpdaters();
         super.onDestroy();
@@ -79,7 +80,7 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
     }
 
     private void renderWeather(Weather weather) {
-        Log.d(TAG, "Weather updated: " + weather);
+        SlackLog.d(TAG, "Weather updated: " + weather);
     }
 
     private void hideSystemUI() {
@@ -110,11 +111,10 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
     private void logAppStart() {
         try {
             PackageInfo packageInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
-            SlackLog.d(TAG, "App version " + packageInfo.versionName + " started");
+            SlackLog.d(TAG, "App version " + packageInfo.versionName + " started :relaxed:");
         } catch (PackageManager.NameNotFoundException e) {
             SlackLog.e(TAG, e);
         }
     }
-
 
 }

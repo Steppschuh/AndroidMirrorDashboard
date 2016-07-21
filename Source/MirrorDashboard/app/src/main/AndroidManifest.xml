@@ -21,6 +21,7 @@
     <application
         android:allowBackup="true"
         android:hardwareAccelerated="true"
+        android:name="android.support.multidex.MultiDexApplication"
         android:icon="@drawable/icon"
         android:label="Mirror Dashboard"
         android:theme="@style/Theme.AppCompat" >
