@@ -7,6 +7,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.steppschuh.mirrordashboard.content.Content;
 import com.steppschuh.mirrordashboard.content.ContentManager;
@@ -21,6 +23,10 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
 
     private ContentManager contentManager;
     private View decorView;
+
+    private TextView weatherTemperature;
+    private TextView weatherDescription;
+    private ImageView weatherIcon;
 
     @Override
     public void onCreate(Bundle icicle) {
@@ -49,6 +55,10 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
 
     private void setupUi() {
         decorView = getWindow().getDecorView();
+
+        weatherTemperature = (TextView) findViewById(R.id.weatherTemperature);
+        weatherDescription = (TextView) findViewById(R.id.weatherDescription);
+        weatherIcon = (ImageView) findViewById(R.id.weatherIcon);
     }
 
     private void setupContent() {
@@ -62,16 +72,21 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
     }
 
     @Override
-    public void onContentUpdated(Content content) {
-        switch (content.getType()) {
-            case Content.TYPE_WEATHER: {
-                renderWeather((Weather) content);
-                break;
+    public void onContentUpdated(final Content content) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                switch (content.getType()) {
+                    case Content.TYPE_WEATHER: {
+                        renderWeather((Weather) content);
+                        break;
+                    }
+                    default: {
+                        Log.w(TAG, "Unable to render content, type unknown: " + content.getType());
+                    }
+                }
             }
-            default: {
-                Log.w(TAG, "Unable to render content, type unknown: " + content.getType());
-            }
-        }
+        });
     }
 
     @Override
@@ -80,7 +95,11 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
     }
 
     private void renderWeather(Weather weather) {
-        SlackLog.v(TAG, "Weather updated: " + weather);
+        Log.v(TAG, "Weather updated: " + weather);
+
+        weatherTemperature.setText(weather.getReadableTemperature());
+        weatherDescription.setText(weather.getReadableTemperatureRange());
+        weatherIcon.setImageResource(YahooWeather.getConditionIcon(weather.getForecastCondition()));
     }
 
     private void hideSystemUI() {

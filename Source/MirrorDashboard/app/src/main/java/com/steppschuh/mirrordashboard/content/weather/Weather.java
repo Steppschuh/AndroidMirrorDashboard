@@ -25,8 +25,21 @@ public class Weather extends Content {
                 .toString();
     }
 
+    public String getReadableTemperatureRange() {
+        return getReadableTemperatureRange(forecastLow, forecastHigh);
+    }
+
+    public String getReadableTemperatureRange(int min, int max) {
+        return new StringBuilder()
+                .append(getReadableTemperature(min))
+                .append("↓ ‧ ")
+                .append(getReadableTemperature(max))
+                .append("↑")
+                .toString();
+    }
+
     public String getReadableTemperature() {
-        return getReadableTemperature(temperature, unit);
+        return getReadableTemperature(temperature);
     }
 
     public static String getReadableTemperature(int temperature) {
