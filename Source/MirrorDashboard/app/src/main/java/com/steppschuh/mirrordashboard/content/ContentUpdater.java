@@ -82,6 +82,9 @@ public class ContentUpdater {
             case Content.TYPE_WEATHER: {
                 return TimeUnit.MINUTES.toMillis(5);
             }
+            case Content.TYPE_TRANSIT: {
+                return TimeUnit.MINUTES.toMillis(3);
+            }
             default: {
                 return INTERVAL_DEFAULT;
             }

@@ -18,6 +18,8 @@ public class YahooWeather extends ContentProvider {
 
     private static final String TAG = YahooWeather.class.getSimpleName();
 
+    public static final String YAHOO_QUERY_ENDPOINT = "https://query.yahooapis.com/v1/public/yql";
+
     // Where On Earth IDs
     public static final String WOEID_POTSDAM = "685783";
 
@@ -121,7 +123,7 @@ public class YahooWeather extends ContentProvider {
                 .toString();
 
         String encodedQuery = URLEncoder.encode(query, "UTF-8");
-        String url = new StringBuilder("https://query.yahooapis.com/v1/public/yql")
+        String url = new StringBuilder(YAHOO_QUERY_ENDPOINT)
                 .append("?q=").append(encodedQuery)
                 .append("&format=json")
                 .toString();

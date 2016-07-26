@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <TextView
+        android:id="@+id/transitDescription"
+        android:text="@string/next_transits"
+        android:gravity="center|left"
+        android:textSize="25sp"
+        android:textColor="@android:color/white"
+        android:alpha="0.75"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="@style/Base.TextAppearance.AppCompat.Display1" />
+
+    <ListView
+        android:layout_below="@id/transitDescription"
+        android:id="@+id/transitList"
+        tools:listitem="@layout/transit_item"
+        android:divider="@null"
+        android:dividerHeight="0dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"></ListView>
+
+</RelativeLayout>

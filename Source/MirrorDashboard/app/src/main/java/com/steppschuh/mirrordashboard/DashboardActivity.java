@@ -8,11 +8,14 @@ import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.steppschuh.mirrordashboard.content.Content;
 import com.steppschuh.mirrordashboard.content.ContentManager;
 import com.steppschuh.mirrordashboard.content.ContentUpdateListener;
+import com.steppschuh.mirrordashboard.content.transit.DeutscheBahn;
+import com.steppschuh.mirrordashboard.content.transit.Transits;
 import com.steppschuh.mirrordashboard.content.weather.Weather;
 import com.steppschuh.mirrordashboard.content.weather.YahooWeather;
 import com.steppschuh.mirrordashboard.request.SlackLog;
@@ -27,6 +30,9 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
     private TextView weatherTemperature;
     private TextView weatherDescription;
     private ImageView weatherIcon;
+
+    private ListView transitList;
+    private TransitListAdapter transitListAdapter;
 
     @Override
     public void onCreate(Bundle icicle) {
@@ -59,14 +65,27 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
         weatherTemperature = (TextView) findViewById(R.id.weatherTemperature);
         weatherDescription = (TextView) findViewById(R.id.weatherDescription);
         weatherIcon = (ImageView) findViewById(R.id.weatherIcon);
+
+        transitList = (ListView) findViewById(R.id.transitList);
+        transitListAdapter = new TransitListAdapter(this);
+        transitList.setAdapter(transitListAdapter);
     }
 
     private void setupContent() {
         contentManager = new ContentManager();
         contentManager.registerContentUpdateListener(this);
 
-        YahooWeather yahooWeather = new YahooWeather(YahooWeather.WOEID_POTSDAM, YahooWeather.UNIT_CELSIUS);
+        // weather
+        String locationId = YahooWeather.WOEID_POTSDAM;
+        String unit = YahooWeather.UNIT_CELSIUS;
+        YahooWeather yahooWeather = new YahooWeather(locationId, unit);
         contentManager.addContentUpdater(yahooWeather);
+
+        // transit
+        String stationId = DeutscheBahn.STATION_POTSDAM_CHARLOTTENHOF;
+        String language = DeutscheBahn.LANGUAGE_GERMAN;
+        DeutscheBahn deutscheBahn = new DeutscheBahn(stationId, language);
+        contentManager.addContentUpdater(deutscheBahn);
 
         contentManager.startAllContentUpdaters();
     }
@@ -79,6 +98,10 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
                 switch (content.getType()) {
                     case Content.TYPE_WEATHER: {
                         renderWeather((Weather) content);
+                        break;
+                    }
+                    case Content.TYPE_TRANSIT: {
+                        renderTransit((Transits) content);
                         break;
                     }
                     default: {
@@ -100,6 +123,14 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
         weatherTemperature.setText(weather.getReadableTemperature());
         weatherDescription.setText(weather.getReadableTemperatureRange());
         weatherIcon.setImageResource(YahooWeather.getConditionIcon(weather.getForecastCondition()));
+    }
+
+    private void renderTransit(Transits transits) {
+        Log.v(TAG, "Transit updated: " + transits);
+
+        transits.trimNextTransits(Transits.TRANSITS_COUNT_DEFAULT);
+        transitListAdapter.setTransits(transits.getNextTransits());
+        transitListAdapter.notifyDataSetChanged();
     }
 
     private void hideSystemUI() {

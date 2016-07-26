@@ -11,7 +11,18 @@
 
     <include
         android:id="@+id/weather"
-        layout="@layout/weather">
+        layout="@layout/weather"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+    </include>
+
+    <include
+        android:id="@+id/departures"
+        layout="@layout/transit"
+        android:layout_marginTop="150dp"
+        android:layout_below="@id/weather"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
     </include>
 
 </RelativeLayout>
