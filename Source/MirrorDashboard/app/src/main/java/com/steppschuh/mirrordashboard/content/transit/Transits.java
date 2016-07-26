@@ -6,7 +6,7 @@ import java.util.List;
 
 public class Transits extends Content {
 
-    public static final int TRANSITS_COUNT_DEFAULT = 7;
+    public static final int TRANSITS_COUNT_DEFAULT = 10;
 
     private List<Transit> nextTransits;
 
