@@ -1,12 +1,12 @@
-package com.steppschuh.mirrordashboard.content.weather;
+package com.steppschuh.mirrordashboard.content.tracking;
 
 import android.util.Log;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.steppschuh.mirrordashboard.R;
 import com.steppschuh.mirrordashboard.content.Content;
 import com.steppschuh.mirrordashboard.content.ContentProvider;
+import com.steppschuh.mirrordashboard.content.weather.Weather;
 import com.steppschuh.mirrordashboard.request.RequestHelper;
 
 import java.net.URLEncoder;
@@ -14,30 +14,25 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-public class YahooWeather extends ContentProvider {
+public class PlaceTracking extends ContentProvider {
 
-    private static final String TAG = YahooWeather.class.getSimpleName();
+    private static final String TAG = PlaceTracking.class.getSimpleName();
 
-    private static final String YAHOO_QUERY_ENDPOINT = "https://query.yahooapis.com/v1/public/yql";
+    private static final String TRACKING_API_ENDPOINT = "http://placetracking.appspot.com/api/";
 
-    // Where On Earth IDs
-    public static final String WOEID_POTSDAM = "685783";
+    private long userId;
+    private long topicId;
 
-    public static final String UNIT_CELSIUS = "c";
-    public static final String UNIT_FAHRENHEIT = "f";
+    private String user;
+    private String place;
 
-    private String woeid;
-    private String unit;
-
-    public YahooWeather(String woeid, String unit) {
-        super(Content.TYPE_WEATHER);
-        this.woeid = woeid;
-        this.unit = unit;
+    public PlaceTracking() {
+        super(Content.TYPE_LOCATION);
     }
 
     @Override
     public Content fetchContent() throws Exception {
-        String url = getRequestUrl(woeid, unit);
+        String url = getRequestUrl(userId, topicId);
         String jsonString = RequestHelper.get(url);
 
         JsonParser parser = new JsonParser();
@@ -116,90 +111,12 @@ public class YahooWeather extends ContentProvider {
         return weather;
     }
 
-    private static String getRequestUrl(String woeid, String unit) throws Exception {
-        String query = new StringBuilder("select * from weather.forecast")
-                .append(" where woeid = ").append(woeid)
-                .append(" and u = \"").append(unit).append("\"")
+    private static String getRequestUrl(long userId, long topicId) throws Exception {
+        return new StringBuilder(TRACKING_API_ENDPOINT)
+                .append("actions/get/)")
+                .append("?userId=").append(userId)
+                .append("&topicId=").append(topicId)
                 .toString();
-
-        String encodedQuery = URLEncoder.encode(query, "UTF-8");
-        String url = new StringBuilder(YAHOO_QUERY_ENDPOINT)
-                .append("?q=").append(encodedQuery)
-                .append("&format=json")
-                .toString();
-
-        return url;
-    }
-
-    public static int getConditionIcon(String condition) {
-        /*
-        0	tornado
-        1	tropical storm
-        2	hurricane
-        3	severe thunderstorms
-        4	thunderstorms
-        5	mixed rain and snow
-        6	mixed rain and sleet
-        7	mixed snow and sleet
-        8	freezing drizzle
-        9	drizzle
-        10	freezing rain
-        11	showers
-        12	showers
-        13	snow flurries
-        14	light snow showers
-        15	blowing snow
-        16	snow
-        17	hail
-        18	sleet
-        19	dust
-        20	foggy
-        21	haze
-        22	smoky
-        23	blustery
-        24	windy
-        25	cold
-        26	cloudy
-        27	mostly cloudy (night)
-        28	mostly cloudy (day)
-        29	partly cloudy (night)
-        30	partly cloudy (day)
-        31	clear (night)
-        32	sunny
-        33	fair (night)
-        34	fair (day)
-        35	mixed rain and hail
-        36	hot
-        37	isolated thunderstorms
-        38	scattered thunderstorms
-        39	scattered thunderstorms
-        40	scattered showers
-        41	heavy snow
-        42	scattered snow showers
-        43	heavy snow
-        44	partly cloudy
-        45	thundershowers
-        46	snow showers
-        47	isolated thundershowers
-         */
-
-        String description = condition.toLowerCase();
-
-        if (description.contains("cloudy")) {
-            if (description.contains("partly")) {
-                return R.drawable.weather_cloud_day;
-            } else {
-                return R.drawable.weather_cloud;
-            }
-        } else if (description.contains("showers") ||description.contains("snow")) {
-            return R.drawable.weather_rain;
-        } else if (description.contains("thunder")) {
-            return R.drawable.weather_thunder;
-        } else if (description.contains("clear") || description.contains("fair") || description.contains("hot")) {
-            return R.drawable.weather_sun;
-        }
-
-        return R.drawable.weather_cloud;
     }
 
 }
