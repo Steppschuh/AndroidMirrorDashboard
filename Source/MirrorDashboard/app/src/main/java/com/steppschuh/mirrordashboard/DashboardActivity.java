@@ -14,6 +14,7 @@ import android.widget.TextView;
 import com.steppschuh.mirrordashboard.content.Content;
 import com.steppschuh.mirrordashboard.content.ContentManager;
 import com.steppschuh.mirrordashboard.content.ContentUpdateListener;
+import com.steppschuh.mirrordashboard.content.ContentUpdater;
 import com.steppschuh.mirrordashboard.content.transit.DeutscheBahn;
 import com.steppschuh.mirrordashboard.content.transit.Transits;
 import com.steppschuh.mirrordashboard.content.weather.Weather;
@@ -113,8 +114,9 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
     }
 
     @Override
-    public void onContentUpdateFailed(Exception exception) {
-        SlackLog.e(TAG, exception);
+    public void onContentUpdateFailed(ContentUpdater contentUpdater, Exception exception) {
+        SlackLog.e(TAG, contentUpdater + " failed to update content", exception);
+        exception.printStackTrace();
     }
 
     private void renderWeather(Weather weather) {

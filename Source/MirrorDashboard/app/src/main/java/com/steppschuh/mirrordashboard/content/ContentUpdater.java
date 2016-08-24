@@ -38,7 +38,7 @@ public class ContentUpdater {
                         updateContent();
                         contentUpdateListener.onContentUpdated(content);
                     } catch (Exception ex) {
-                        contentUpdateListener.onContentUpdateFailed(ex);
+                        contentUpdateListener.onContentUpdateFailed(ContentUpdater.this, ex);
                     } finally {
                         if (shouldUpdate) {
                             handler.postDelayed(this, interval);
