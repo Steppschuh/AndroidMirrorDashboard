@@ -115,7 +115,7 @@ public class DeutscheBahn extends ContentProvider {
         return new Transits(transitList);
     }
 
-    private static String getRequestUrl(String stationId, String language) throws Exception {
+    private static String getRequestUrl(String stationId, String language) {
         String url = new StringBuilder(EXTRACTLY_ENDPOINT)
                 .append(EXTRACTLY_TOKEN)
                 .append("/?stopId=").append(stationId)

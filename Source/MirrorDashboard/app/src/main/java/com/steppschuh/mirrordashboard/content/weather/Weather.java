@@ -29,7 +29,7 @@ public class Weather extends Content {
         return getReadableTemperatureRange(forecastLow, forecastHigh);
     }
 
-    public String getReadableTemperatureRange(int min, int max) {
+    public static String getReadableTemperatureRange(int min, int max) {
         return new StringBuilder()
                 .append(getReadableTemperature(min))
                 .append("↓ ‧ ")

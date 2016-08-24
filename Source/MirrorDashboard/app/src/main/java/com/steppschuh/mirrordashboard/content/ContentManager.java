@@ -25,9 +25,9 @@ public class ContentManager implements ContentUpdateListener {
     }
 
     @Override
-    public void onContentUpdateFailed(Exception exception) {
+    public void onContentUpdateFailed(ContentUpdater contentUpdater, Exception exception) {
         for (ContentUpdateListener contentUpdateListener : contentUpdateListeners) {
-            contentUpdateListener.onContentUpdateFailed(exception);
+            contentUpdateListener.onContentUpdateFailed(contentUpdater, exception);
         }
     }
 

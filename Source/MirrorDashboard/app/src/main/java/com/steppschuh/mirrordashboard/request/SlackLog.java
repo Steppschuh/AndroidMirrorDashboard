@@ -80,8 +80,11 @@ public final class SlackLog {
     }
 
     public static void e(String tag, Exception exception) {
-        Log.e(tag, exception.getMessage());
-        String message = exception.getClass().getSimpleName() + ": " + exception.getMessage();
+        e(tag, exception.getMessage(), exception);
+    }
+
+    public static void e(String tag, String message, Exception exception) {
+        Log.e(tag, message + ": " + exception.getMessage());
         Attachment attachment = generateAttachment(ERROR, tag, message);
 
         List<AttachmentField> fields = new ArrayList<>();
