@@ -52,8 +52,7 @@ public class TransitListAdapter extends ArrayAdapter<Transit> {
         Transit transit = transits.get(position);
 
         TextView departure = (TextView) transitLayout.findViewById(R.id.transitDeparture);
-        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm", Locale.US);
-        departure.setText(dateFormat.format(new Date(transit.getDeparture())));
+        departure.setText(transit.getReadableTime());
 
         TextView destination = (TextView) transitLayout.findViewById(R.id.transitDestination);
         String destinationText = new StringBuilder()

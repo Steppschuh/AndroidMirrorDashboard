@@ -5,7 +5,7 @@
     <string name="next_transits">Next transits:</string>
 
     <string name="location_action_arrive">is</string>
-    <string name="location_action_leave">isn't</string>
+    <string name="location_action_leave">isn\'t</string>
 
     <string name="location_work">at work</string>
     <string name="location_home">at home</string>

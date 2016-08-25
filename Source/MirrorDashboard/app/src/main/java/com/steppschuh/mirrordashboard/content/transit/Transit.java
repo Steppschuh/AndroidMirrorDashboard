@@ -2,7 +2,10 @@ package com.steppschuh.mirrordashboard.content.transit;
 
 import com.steppschuh.mirrordashboard.content.Content;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class Transit extends Content {
 
@@ -16,6 +19,20 @@ public class Transit extends Content {
 
     public Transit() {
         super(Content.TYPE_TRANSIT);
+    }
+
+    public String getReadableTime() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm", Locale.US);
+        return dateFormat.format(new Date(departure));
+    }
+
+    @Override
+    public String toString()
+    {
+        return new StringBuilder(getReadableTime())
+                .append(" - ").append(tripId)
+                .append(" to ").append(destination)
+                .toString();
     }
 
     public String getTripId() {

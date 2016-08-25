@@ -6,7 +6,9 @@ import android.util.Log;
 import com.steppschuh.mirrordashboard.R;
 import com.steppschuh.mirrordashboard.content.Content;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 public class Location extends Content {
@@ -33,13 +35,19 @@ public class Location extends Content {
 
     public String getReadableString(Context context) {
         return new StringBuilder(subject)
-                .append(" ").append(getReadableString(context))
+                .append(" ").append(getReadableAction(context))
                 .append(" ").append(place)
                 .append(" ").append(getReadableTime(context))
                 .toString();
     }
 
     public String getReadableTime(Context context) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm", Locale.US);
+        String time = dateFormat.format(new Date(changeTimestamp));
+        return String.format(context.getResources().getString(R.string.time_since_value), time);
+    }
+
+    public String getReadablePassedTime(Context context) {
         long diffInSeconds = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - changeTimestamp);
         long seconds = (diffInSeconds >= 60 ? diffInSeconds % 60 : diffInSeconds);
         long minutes = (diffInSeconds = (diffInSeconds / 60)) >= 60 ? diffInSeconds % 60 : diffInSeconds;

@@ -29,6 +29,18 @@ public class Transits extends Content {
         }
     }
 
+    @Override
+    public String toString()
+    {
+        StringBuilder sb = new StringBuilder()
+                .append(nextTransits.size())
+                .append(" transit(s):");
+        for (Transit transit : nextTransits) {
+            sb.append("\n").append(transit);
+        }
+        return sb.toString();
+    }
+
     public List<Transit> getNextTransits() {
         return nextTransits;
     }

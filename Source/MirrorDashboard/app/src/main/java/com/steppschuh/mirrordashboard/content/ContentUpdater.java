@@ -80,9 +80,12 @@ public class ContentUpdater {
     public static long getDefaultUpdateInterval(int type) {
         switch (type) {
             case Content.TYPE_WEATHER: {
-                return TimeUnit.MINUTES.toMillis(5);
+                return TimeUnit.MINUTES.toMillis(10);
             }
             case Content.TYPE_TRANSIT: {
+                return TimeUnit.MINUTES.toMillis(3);
+            }
+            case Content.TYPE_LOCATION: {
                 return TimeUnit.MINUTES.toMillis(3);
             }
             default: {

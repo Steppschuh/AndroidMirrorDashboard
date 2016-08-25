@@ -41,7 +41,7 @@ public class SinglePlaceTracking extends ContentProvider {
 
         JsonArray contentJson = jsonObject.getAsJsonArray("content");
         if (contentJson.size() < 1) {
-            throw new Exception("No tracking data available");
+            throw new Exception("No tracking data available for " + lastLocation);
         }
 
         JsonObject entryJson = (JsonObject) contentJson.get(0);
