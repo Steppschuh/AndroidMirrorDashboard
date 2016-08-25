@@ -4,6 +4,26 @@
 
     <string name="next_transits">Next transits:</string>
 
+    <string name="location_action_arrive">is</string>
+    <string name="location_action_leave">isn't</string>
+
+    <string name="location_work">at work</string>
+    <string name="location_home">at home</string>
+
+    <string name="time_now">just now</string>
+    <string name="time_since">since</string>
+    <string name="time_since_value">since %1$s</string>
+    <string name="time_ago">ago</string>
+    <string name="time_ago_value">%1$s ago</string>
+    <string name="time_few_minutes">a few minutes</string>
+    <string name="time_minute">minute</string>
+    <string name="time_minutes">minutes</string>
+    <string name="time_hour">hour</string>
+    <string name="time_hours">hours</string>
+    <string name="time_day">day</string>
+    <string name="time_days">days</string>
+    <string name="time_and">and</string>
+
     <string name="permission_camera_rationale">Access to the camera is needed for detection</string>
     <string name="no_camera_permission">This application cannot run because it does not have the camera permission.  The application will now exit.</string>
     <string name="low_storage_error">Face detector dependencies cannot be downloaded due to low device storage</string>

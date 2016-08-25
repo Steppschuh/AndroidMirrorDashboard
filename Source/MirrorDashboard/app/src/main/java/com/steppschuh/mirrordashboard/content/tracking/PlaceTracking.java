@@ -2,121 +2,106 @@ package com.steppschuh.mirrordashboard.content.tracking;
 
 import android.util.Log;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.steppschuh.mirrordashboard.content.Content;
 import com.steppschuh.mirrordashboard.content.ContentProvider;
-import com.steppschuh.mirrordashboard.content.weather.Weather;
-import com.steppschuh.mirrordashboard.request.RequestHelper;
 
-import java.net.URLEncoder;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
+import java.util.HashMap;
+import java.util.Map;
 
-public class PlaceTracking extends ContentProvider {
+public class PlaceTracking extends ContentProvider
+{
+
+    /**
+     * This provider fetches its data from the PlaceTracking API,
+     * which is an open-source project powered by the Google App Engine.
+     *
+     * You need to create you own user and topic IDs (using simple get
+     * requests, no sign up required), here's how:
+     * https://github.com/Steppschuh/PlaceTracking
+     */
 
     private static final String TAG = PlaceTracking.class.getSimpleName();
 
-    private static final String TRACKING_API_ENDPOINT = "http://placetracking.appspot.com/api/";
+    public static final long USER_ID_STEPHAN = 5659313586569216l;
+    public static final long USER_ID_LENA = 5629935204958208l;
 
-    private long userId;
-    private long topicId;
+    public static final long TOPIC_ID_WORK = 5656904915222528l;
+    public static final long TOPIC_ID_HOME = 5725273681035264l;
 
-    private String user;
-    private String place;
+    private long subjectId;
+    private String subjectName;
+    private HashMap<Long, String> topics = new HashMap<>();
+    private HashMap<Long, Location> locations = new HashMap<>();
+    private HashMap<Long, SinglePlaceTracking> locationProviders = new HashMap<>();
 
-    public PlaceTracking() {
+    public PlaceTracking(long subjectId, String subjectName)
+    {
         super(Content.TYPE_LOCATION);
+        this.subjectId = subjectId;
+        this.subjectName = subjectName;
     }
 
     @Override
     public Content fetchContent() throws Exception {
-        String url = getRequestUrl(userId, topicId);
-        String jsonString = RequestHelper.get(url);
-
-        JsonParser parser = new JsonParser();
-        JsonObject jsonObject = parser.parse(jsonString).getAsJsonObject();
-
-        return createContent(jsonObject);
+        for (Map.Entry<Long, SinglePlaceTracking> placeTrackerEntry : locationProviders.entrySet()) {
+            try {
+                Location location = (Location) placeTrackerEntry.getValue().fetchContent();
+                setLocation(placeTrackerEntry.getKey(), location);
+            } catch (Exception ex) {
+                Log.w(TAG, "Unable to update location: " + placeTrackerEntry.getValue() + ": " + ex.getMessage());
+            }
+        }
+        Location latestLocation = getLatestLocation();
+        if (latestLocation == null) {
+            throw new Exception("No location data available");
+        }
+        return latestLocation;
     }
 
-    private static Content createContent(JsonObject jsonObject) {
-        Weather weather = new Weather();
-        JsonObject channelJson = jsonObject.getAsJsonObject("query")
-                .getAsJsonObject("results")
-                .getAsJsonObject("channel");
-        JsonObject itemJson = channelJson.getAsJsonObject("item");
+    public void addTopic(long topicId, String topicName) {
+        topics.put(topicId, topicName);
 
-        // unit
-        try {
-            JsonObject unitJson = channelJson.getAsJsonObject("units");
-            weather.setUnit(unitJson.get("temperature").getAsString());
-        } catch (Exception ex) {
-            Log.e(TAG, "Unable to parse unit: " + ex.getMessage());
+        if (!locations.containsKey(topicId)) {
+            Location location = new Location();
+            location.setSubject(subjectName);
+            location.setPlace(topicName);
+            locations.put(topicId, location);
         }
 
-        // humidity
-        try {
-            JsonObject atmosphereJson = channelJson.getAsJsonObject("atmosphere");
-            weather.setHumidity(atmosphereJson.get("humidity").getAsFloat() / 100);
-        } catch (Exception ex) {
-            Log.e(TAG, "Unable to parse humidity: " + ex.getMessage());
+        if (!locationProviders.containsKey(topicId)) {
+            SinglePlaceTracking placeTracking = new SinglePlaceTracking(subjectId, topicId, locations.get(topicId));
+            locationProviders.put(topicId, placeTracking);
         }
-
-        // sunset & sunrise
-        try {
-            JsonObject astronomyJson = channelJson.getAsJsonObject("astronomy");
-            SimpleDateFormat currentDateFormat = new SimpleDateFormat("M/d/yy", Locale.US);
-            SimpleDateFormat yahooDateFormat = new SimpleDateFormat("M/d/yy h:mm a", Locale.US);
-
-            String sunriseString = new StringBuilder()
-                    .append(currentDateFormat.format(new Date()))
-                    .append(" ")
-                    .append(astronomyJson.get("sunrise").getAsString())
-                    .toString();
-            Date sunrise = yahooDateFormat.parse(sunriseString);
-            weather.setSunrise(sunrise.getTime());
-
-            String sunsetString = new StringBuilder()
-                    .append(currentDateFormat.format(new Date()))
-                    .append(" ")
-                    .append(astronomyJson.get("sunset").getAsString())
-                    .toString();
-            Date sunset = yahooDateFormat.parse(sunsetString);
-            weather.setSunset(sunset.getTime());
-        } catch (Exception ex) {
-            Log.e(TAG, "Unable to parse sunset & sunrise: " + ex.getMessage());
-        }
-
-        // current condition
-        try {
-            JsonObject conditionJson = itemJson.getAsJsonObject("condition");
-            weather.setCondition(conditionJson.get("text").getAsString());
-            weather.setTemperature(conditionJson.get("temp").getAsInt());
-        } catch (Exception ex) {
-            Log.e(TAG, "Unable to parse current condition: " + ex.getMessage());
-        }
-
-        // forecast
-        try {
-            JsonObject forecastJson = (JsonObject) itemJson.getAsJsonArray("forecast").get(0);
-            weather.setForecastHigh(forecastJson.get("high").getAsInt());
-            weather.setForecastLow(forecastJson.get("low").getAsInt());
-            weather.setForecastCondition(forecastJson.get("text").getAsString());
-        } catch (Exception ex) {
-            Log.e(TAG, "Unable to parse forecast: " + ex.getMessage());
-        }
-
-        return weather;
     }
 
-    private static String getRequestUrl(long userId, long topicId) throws Exception {
-        return new StringBuilder(TRACKING_API_ENDPOINT)
-                .append("actions/get/)")
-                .append("?userId=").append(userId)
-                .append("&topicId=").append(topicId)
-                .toString();
+    public boolean setLocation(long topicId, Location location) {
+        if (!topics.containsKey(topicId)) {
+            Log.w(TAG, "Unable to set location, topic is unknown: " + topicId);
+            return false;
+        }
+        locations.put(topicId, location);
+        return true;
+    }
+
+    public long getLatestTopicId() {
+        long latestTopicId = -1;
+        long latestChangeTimestamp = -1;
+        for (Map.Entry<Long, Location> locationEntry : locations.entrySet()) {
+            long currentChangeTimestamp = locationEntry.getValue().getChangeTimestamp();
+            if (currentChangeTimestamp > latestChangeTimestamp) {
+                latestChangeTimestamp = currentChangeTimestamp;
+                latestTopicId = locationEntry.getKey();
+            }
+        }
+        return latestTopicId;
+    }
+
+    public Location getLatestLocation() {
+        long latestTopicId = getLatestTopicId();
+        if (!locations.containsKey(latestTopicId)) {
+            return null;
+        }
+        return locations.get(latestTopicId);
     }
 
 }

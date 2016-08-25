@@ -15,6 +15,9 @@ import com.steppschuh.mirrordashboard.content.Content;
 import com.steppschuh.mirrordashboard.content.ContentManager;
 import com.steppschuh.mirrordashboard.content.ContentUpdateListener;
 import com.steppschuh.mirrordashboard.content.ContentUpdater;
+import com.steppschuh.mirrordashboard.content.tracking.Location;
+import com.steppschuh.mirrordashboard.content.tracking.SinglePlaceTracking;
+import com.steppschuh.mirrordashboard.content.tracking.PlaceTracking;
 import com.steppschuh.mirrordashboard.content.transit.DeutscheBahn;
 import com.steppschuh.mirrordashboard.content.transit.Transits;
 import com.steppschuh.mirrordashboard.content.weather.Weather;
@@ -88,6 +91,12 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
         DeutscheBahn deutscheBahn = new DeutscheBahn(stationId, language);
         contentManager.addContentUpdater(deutscheBahn);
 
+        // location
+        PlaceTracking placeTracking = new PlaceTracking(PlaceTracking.USER_ID_STEPHAN, "Stephan");
+        placeTracking.addTopic(PlaceTracking.TOPIC_ID_WORK, "Arbeit");
+        placeTracking.addTopic(PlaceTracking.TOPIC_ID_HOME, "Zu Hause");
+        contentManager.addContentUpdater(placeTracking);
+
         contentManager.startAllContentUpdaters();
     }
 
@@ -103,6 +112,9 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
                     }
                     case Content.TYPE_TRANSIT: {
                         renderTransit((Transits) content);
+                        break;
+                    }case Content.TYPE_LOCATION: {
+                        renderLocation((Location) content);
                         break;
                     }
                     default: {
@@ -133,6 +145,10 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
         transits.trimNextTransits(Transits.TRANSITS_COUNT_DEFAULT);
         transitListAdapter.setTransits(transits.getNextTransits());
         transitListAdapter.notifyDataSetChanged();
+    }
+
+    private void renderLocation(Location location) {
+        Log.v(TAG, "Location updated: " + location.getReadableString(this));
     }
 
     private void hideSystemUI() {

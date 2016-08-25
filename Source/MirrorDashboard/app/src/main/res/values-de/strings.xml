@@ -2,4 +2,20 @@
 <resources>
     <string name="low_storage_error">Face detector dependencies cannot be downloaded due to low device storage</string>
     <string name="next_transits">Nächste Abfahrten:</string>
+    <string name="location_work">auf Arbeit</string>
+    <string name="location_home">zu Hause</string>
+    <string name="location_action_leave">ist nicht mehr</string>
+    <string name="location_action_arrive">ist</string>
+    <string name="time_ago">vor</string>
+    <string name="time_ago_value">vor %1$s</string>
+    <string name="time_few_minutes">ein paar Minuten</string>
+    <string name="time_hour">Stunde</string>
+    <string name="time_hours">Stunden</string>
+    <string name="time_minutes">Minuten</string>
+    <string name="time_now">gerade eben</string>
+    <string name="time_since">seit</string>
+    <string name="time_since_value">seit %1$s</string>
+    <string name="time_and">und</string>
+    <string name="time_day">Tag</string>
+    <string name="time_days">Tagen</string>
 </resources>
