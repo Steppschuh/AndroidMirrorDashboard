@@ -26,11 +26,16 @@ import com.steppschuh.mirrordashboard.content.transit.TransitListAdapter;
 import com.steppschuh.mirrordashboard.content.transit.Transits;
 import com.steppschuh.mirrordashboard.content.weather.Weather;
 import com.steppschuh.mirrordashboard.content.weather.YahooWeather;
+import com.steppschuh.mirrordashboard.pattern.Pattern;
+import com.steppschuh.mirrordashboard.pattern.PatternManager;
+import com.steppschuh.mirrordashboard.pattern.PatternMatchedListener;
+import com.steppschuh.mirrordashboard.pattern.PatternRecordedListener;
+import com.steppschuh.mirrordashboard.pattern.recorder.GenericPatternRecorder;
 import com.steppschuh.mirrordashboard.request.SlackLog;
 
 import java.util.concurrent.TimeUnit;
 
-public class DashboardActivity extends AppCompatActivity implements ContentUpdateListener {
+public class DashboardActivity extends AppCompatActivity implements ContentUpdateListener, PatternMatchedListener {
 
     private static final String TAG = DashboardActivity.class.getSimpleName();
     private static final long SCREEN_REFRESH_INTERVAL = TimeUnit.SECONDS.toMillis(30);
@@ -39,6 +44,8 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
     private Handler screenRefreshHandler = new Handler();
 
     private ContentManager contentManager;
+    private PatternManager patternManager;
+
     private View decorView;
 
     private TextView weatherTemperature;
@@ -101,6 +108,16 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
         locationList = (ListView) findViewById(R.id.locationList);
         locationListAdapter = new LocationListAdapter(this);
         locationList.setAdapter(locationListAdapter);
+    }
+
+    private void setupPatterns() {
+        patternManager = new PatternManager();
+        patternManager.registerPatternListener(this);
+    }
+
+    @Override
+    public void onPatternDetected(Pattern pattern) {
+        Log.d(TAG, "Pattern detected: " + pattern);
     }
 
     /**
