@@ -20,8 +20,11 @@ public class Weather extends Content {
 
     @Override
     public String toString() {
-        return new StringBuilder(getReadableTemperature())
-                .append(" - ").append(condition)
+        return new StringBuilder("Currently ")
+                .append(condition)
+                .append(" with ").append(getReadableTemperature())
+                .append(" (").append(getReadableTemperatureRange()).append(")")
+                .append(", forecast condition: ").append(forecastCondition)
                 .toString();
     }
 

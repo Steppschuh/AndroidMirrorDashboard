@@ -35,7 +35,7 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
     private static final String TAG = DashboardActivity.class.getSimpleName();
     private static final long SCREEN_REFRESH_INTERVAL = TimeUnit.SECONDS.toMillis(30);
 
-    private boolean shouldRefreshScreen = true;
+    private boolean shouldRefreshScreen = false;
     private Handler screenRefreshHandler = new Handler();
 
     private ContentManager contentManager;

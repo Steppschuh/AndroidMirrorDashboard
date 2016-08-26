@@ -15,13 +15,8 @@
         android:id="@+id/weatherDescription"
         android:text="currently sunny, later cloudy"
         android:gravity="center|left"
-        android:textSize="25sp"
-        android:alpha="0.5"
-        android:textColor="@android:color/white"
         android:layout_below="@id/weatherTemperature"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        style="@style/Base.TextAppearance.AppCompat.Display1" />
+        style="@style/DisplayText.Info" />
 
     <ImageView
         android:id="@+id/weatherIcon"
