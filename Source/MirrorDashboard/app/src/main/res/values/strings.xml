@@ -10,6 +10,7 @@
 
     <string name="location_work">at work</string>
     <string name="location_home">at home</string>
+    <string name="location_university">at the university</string>
 
     <string name="time_now">just now</string>
     <string name="time_since">since</string>

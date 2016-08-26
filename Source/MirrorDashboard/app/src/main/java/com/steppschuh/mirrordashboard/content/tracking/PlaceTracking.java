@@ -27,6 +27,8 @@ public class PlaceTracking extends ContentProvider
 
     public static final long TOPIC_ID_WORK = 5656904915222528l;
     public static final long TOPIC_ID_HOME = 5725273681035264l;
+    public static final long TOPIC_ID_UNIVERSITY = 5653495919149056l;
+    public static final long TOPIC_ID_POTSDAM_CENTRAL_STATION = 5744581840732160l;
 
     private long subjectId;
     private String subjectName;
