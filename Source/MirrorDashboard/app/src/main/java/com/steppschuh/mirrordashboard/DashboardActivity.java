@@ -33,6 +33,9 @@ import com.steppschuh.mirrordashboard.pattern.PatternRecordedListener;
 import com.steppschuh.mirrordashboard.pattern.recorder.GenericPatternRecorder;
 import com.steppschuh.mirrordashboard.request.SlackLog;
 
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.concurrent.TimeUnit;
 
 public class DashboardActivity extends AppCompatActivity implements ContentUpdateListener, PatternMatchedListener {
@@ -269,6 +272,7 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
      */
     private void refreshScreen() {
         Log.v(TAG, "Refreshing screen");
+        setScreenBrightness(getAdjustedScreenBrightness());
 
         // Location content
         locationListAdapter.notifyDataSetChanged();
@@ -276,6 +280,7 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
         // Transit content
         transitListAdapter.removeDepartedTransits();
         transitListAdapter.notifyDataSetChanged();
+
     }
 
     /**
@@ -301,6 +306,25 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
 
     private void maximizeScreenBrightness() {
         setScreenBrightness(1f);
+    }
+
+    /**
+     * Sets the device's screen brightness based on the current
+     * condition
+     */
+    private float getAdjustedScreenBrightness() {
+        Date now = new Date();
+        Calendar calendar = GregorianCalendar.getInstance();
+        calendar.setTime(now);
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+
+        if (hour >= 23 || hour <= 6) {
+            return 0.33f;
+        } else if (hour >= 21 || hour <= 8) {
+            return 0.66f;
+        } else {
+            return 1f;
+        }
     }
 
     /**
