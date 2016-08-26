@@ -1,4 +1,4 @@
-package com.steppschuh.mirrordashboard;
+package com.steppschuh.mirrordashboard.content.transit;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -8,14 +8,10 @@ import android.widget.ArrayAdapter;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.steppschuh.mirrordashboard.content.transit.Transit;
-import com.steppschuh.mirrordashboard.content.transit.Transits;
+import com.steppschuh.mirrordashboard.R;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 public class TransitListAdapter extends ArrayAdapter<Transit> {
 
@@ -69,8 +65,16 @@ public class TransitListAdapter extends ArrayAdapter<Transit> {
     }
 
     private float getAlpha(int position) {
-        double decrease = Math.min(0.2, (float) 1 / transits.size());
-        return Math.max(0, (float) (1 - (position * decrease)));
+        int minimumCount = 3;
+        double maximumDecrease = 0.34;
+        boolean shouldHaveFullAlpha = position < minimumCount;
+        boolean hasEnoughEntries = (transits.size() - minimumCount) > (1 / maximumDecrease);
+        if (shouldHaveFullAlpha || !hasEnoughEntries) {
+            return 1;
+        } else {
+            double decrease = Math.min(maximumDecrease, (float) 1 / (transits.size() - minimumCount));
+            return Math.max(0, (float) (1 - ((position - minimumCount + 1) * decrease)));
+        }
     }
 
     public List<Transit> getTransits() {

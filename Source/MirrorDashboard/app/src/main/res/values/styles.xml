@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="DisplayText" parent="@style/TextAppearance.AppCompat.Display1">
+        <item name="android:textColor">@color/normalText</item>
+        <item name="android:textSize">@dimen/text_size_default</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+    <style name="DisplayText.Info" parent="@style/DisplayText">
+        <item name="android:alpha">0.75</item>
+    </style>
+
+    <style name="DisplayText.Warning" parent="@style/DisplayText">
+        <item name="android:textColor">@color/warningText</item>
+    </style>
+
+    <style name="DisplayText.ContentHeading" parent="@style/DisplayText">
+        <item name="android:alpha">0.75</item>
+    </style>
+
+    <style name="ContentListView">
+        <item name="android:divider">@null</item>
+        <item name="android:dividerHeight">0dp</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+</resources>

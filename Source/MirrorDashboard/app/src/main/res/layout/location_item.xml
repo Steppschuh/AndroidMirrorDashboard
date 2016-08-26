@@ -7,25 +7,25 @@
     android:paddingBottom="5dp">
 
     <TextView
-        android:id="@+id/transitDeparture"
-        android:text="14:58"
+        android:id="@+id/locationDescription"
+        android:text="Stephan is at work"
         style="@style/DisplayText" />
 
     <TextView
-        android:id="@+id/transitDestination"
-        android:text="Berlin Central Station"
-        android:layout_toRightOf="@id/transitDeparture"
-        android:layout_marginLeft="20dp"
-        style="@style/DisplayText" />
+        android:id="@+id/locationChange"
+        android:text="since 09:15"
+        android:layout_toRightOf="@id/locationDescription"
+        android:layout_marginLeft="10dp"
+        style="@style/DisplayText.Info" />
 
     <TextView
-        android:id="@+id/transitNote"
-        android:text="5 minutes later"
+        android:id="@+id/locationNote"
+        android:text="longer than usual"
         android:textSize="@dimen/text_size_small"
-        android:layout_toRightOf="@id/transitDestination"
+        android:layout_toRightOf="@id/locationChange"
         android:layout_marginLeft="20dp"
-        android:layout_alignTop="@id/transitDestination"
-        android:layout_alignBottom="@id/transitDestination"
+        android:layout_alignTop="@id/locationChange"
+        android:layout_alignBottom="@id/locationChange"
         android:gravity="center|left"
         style="@style/DisplayText.Warning" />
 

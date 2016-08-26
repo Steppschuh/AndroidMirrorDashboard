@@ -2,7 +2,8 @@
 <resources>
     <string name="ok">OK</string>
 
-    <string name="next_transits">Next transits:</string>
+    <string name="heading_transit">Next transits:</string>
+    <string name="heading_location">Tracked locations:</string>
 
     <string name="location_action_arrive">is</string>
     <string name="location_action_leave">isn\'t</string>
@@ -25,6 +26,6 @@
     <string name="time_and">and</string>
 
     <string name="permission_camera_rationale">Access to the camera is needed for detection</string>
-    <string name="no_camera_permission">This application cannot run because it does not have the camera permission.  The application will now exit.</string>
+    <string name="no_camera_permission">This application cannot run because it does not have the camera permission. The application will now exit.</string>
     <string name="low_storage_error">Face detector dependencies cannot be downloaded due to low device storage</string>
 </resources>

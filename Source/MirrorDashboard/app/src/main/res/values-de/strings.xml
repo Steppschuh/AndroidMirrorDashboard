@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="low_storage_error">Face detector dependencies cannot be downloaded due to low device storage</string>
-    <string name="next_transits">Nächste Abfahrten:</string>
+    <string name="heading_transit">Nächste Abfahrten:</string>
     <string name="location_work">auf Arbeit</string>
     <string name="location_home">zu Hause</string>
     <string name="location_action_leave">ist nicht mehr</string>
@@ -18,4 +18,6 @@
     <string name="time_and">und</string>
     <string name="time_day">Tag</string>
     <string name="time_days">Tagen</string>
+    <string name="heading_location">Bekannte Orte:</string>
+    <string name="time_minute">Minute</string>
 </resources>

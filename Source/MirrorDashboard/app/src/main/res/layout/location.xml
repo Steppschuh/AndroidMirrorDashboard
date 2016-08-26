@@ -6,12 +6,12 @@
 
     <TextView
         android:id="@+id/contentHeading"
-        android:text="@string/heading_transit"
+        android:text="@string/heading_location"
         style="@style/DisplayText.ContentHeading" />
 
     <ListView
-        android:id="@+id/transitList"
-        tools:listitem="@layout/transit_item"
+        android:id="@+id/locationList"
+        tools:listitem="@layout/location_item"
         android:layout_below="@id/contentHeading"
         style="@style/ContentListView" />
 

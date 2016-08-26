@@ -41,6 +41,13 @@ public class Location extends Content {
                 .toString();
     }
 
+    public String getReadableDescription(Context context) {
+        return new StringBuilder(subject)
+                .append(" ").append(getReadableAction(context))
+                .append(" ").append(place)
+                .toString();
+    }
+
     public String getReadableTime(Context context) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm", Locale.US);
         String time = dateFormat.format(new Date(changeTimestamp));

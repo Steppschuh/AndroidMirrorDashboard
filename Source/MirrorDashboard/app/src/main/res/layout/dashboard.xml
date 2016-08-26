@@ -17,10 +17,19 @@
     </include>
 
     <include
-        android:id="@+id/departures"
-        layout="@layout/transit"
-        android:layout_marginTop="150dp"
+        android:id="@+id/locations"
+        layout="@layout/location"
+        android:layout_marginTop="50dp"
         android:layout_below="@id/weather"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+    </include>
+
+    <include
+        android:id="@+id/transits"
+        layout="@layout/transit"
+        android:layout_marginTop="50dp"
+        android:layout_below="@id/locations"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
     </include>

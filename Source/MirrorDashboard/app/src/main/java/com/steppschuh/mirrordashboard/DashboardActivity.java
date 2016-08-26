@@ -16,9 +16,10 @@ import com.steppschuh.mirrordashboard.content.ContentManager;
 import com.steppschuh.mirrordashboard.content.ContentUpdateListener;
 import com.steppschuh.mirrordashboard.content.ContentUpdater;
 import com.steppschuh.mirrordashboard.content.tracking.Location;
-import com.steppschuh.mirrordashboard.content.tracking.SinglePlaceTracking;
+import com.steppschuh.mirrordashboard.content.tracking.LocationListAdapter;
 import com.steppschuh.mirrordashboard.content.tracking.PlaceTracking;
 import com.steppschuh.mirrordashboard.content.transit.DeutscheBahn;
+import com.steppschuh.mirrordashboard.content.transit.TransitListAdapter;
 import com.steppschuh.mirrordashboard.content.transit.Transits;
 import com.steppschuh.mirrordashboard.content.weather.Weather;
 import com.steppschuh.mirrordashboard.content.weather.YahooWeather;
@@ -38,10 +39,13 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
     private ListView transitList;
     private TransitListAdapter transitListAdapter;
 
+    private ListView locationList;
+    private LocationListAdapter locationListAdapter;
+
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
-        setContentView(R.layout.main);
+        setContentView(R.layout.dashboard);
 
         setupUi();
         setupContent();
@@ -73,6 +77,10 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
         transitList = (ListView) findViewById(R.id.transitList);
         transitListAdapter = new TransitListAdapter(this);
         transitList.setAdapter(transitListAdapter);
+
+        locationList = (ListView) findViewById(R.id.locationList);
+        locationListAdapter = new LocationListAdapter(this);
+        locationList.setAdapter(locationListAdapter);
     }
 
     private void setupContent() {
@@ -149,6 +157,8 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
 
     private void renderLocation(Location location) {
         Log.v(TAG, "Location updated: " + location.getReadableString(this));
+        locationListAdapter.updateLocation(location);
+        locationListAdapter.notifyDataSetChanged();
     }
 
     private void hideSystemUI() {
