@@ -81,16 +81,18 @@ public class Location extends Content {
                 }
             }
         } else if (hours > 0) {
-            sb.append(hours).append(" ");
-            if (hours == 1) {
+            sb.append(hours);
+            int hourFraction = (int) Math.floor((minutes * 10) / 60);
+            if (hours < 3 && hourFraction > 0) {
+                sb.append(".").append(hourFraction);
+            }
+            sb.append(" ");
+            if (hours == 1 && hourFraction == 0) {
                 sb.append(context.getResources().getString(R.string.time_hour));
             } else {
                 sb.append(context.getResources().getString(R.string.time_hours));
             }
-            if (minutes > 1) {
-                sb.append(" ").append(context.getResources().getString(R.string.time_and)).append(" ");
-                sb.append(minutes).append(" ").append(context.getResources().getString(R.string.time_minutes));
-            }
+
         } else if (minutes >= 15) {
             sb.append(minutes).append(context.getResources().getString(R.string.time_minutes));
         } else if (minutes >= 2) {

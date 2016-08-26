@@ -12,7 +12,7 @@ public class ContentManager implements ContentUpdateListener {
     private static final String TAG = ContentManager.class.getSimpleName();
 
     private List<ContentUpdateListener> contentUpdateListeners = new ArrayList<>();
-    private Map<Integer, ContentUpdater> contentUpdaters = new HashMap<>();
+    private List<ContentUpdater> contentUpdaters = new ArrayList<>();
 
     public ContentManager() {
     }
@@ -48,22 +48,14 @@ public class ContentManager implements ContentUpdateListener {
     }
 
     public void startAllContentUpdaters() {
-        for (Map.Entry<Integer, ContentUpdater> contentUpdaterEntry : contentUpdaters.entrySet()) {
-            contentUpdaterEntry.getValue().startUpdating(this);
+        for (ContentUpdater contentUpdater : contentUpdaters) {
+            contentUpdater.startUpdating(this);
         }
     }
 
     public void stopAllContentUpdaters() {
-        for (Map.Entry<Integer, ContentUpdater> contentUpdaterEntry : contentUpdaters.entrySet()) {
-            contentUpdaterEntry.getValue().stopUpdating();
-        }
-    }
-
-    public ContentUpdater getContentUpdater(int type) {
-        if (contentUpdaters.containsKey(type)) {
-            return contentUpdaters.get(type);
-        } else {
-            return null;
+        for (ContentUpdater contentUpdater : contentUpdaters) {
+            contentUpdater.stopUpdating();
         }
     }
 
@@ -73,10 +65,9 @@ public class ContentManager implements ContentUpdateListener {
     }
 
     public void addContentUpdater(ContentUpdater contentUpdater) {
-        if (contentUpdaters.containsKey(contentUpdater.getType())) {
-            Log.w(TAG, "Overwriting ContentUpdater for type " + contentUpdater.getType());
+        if (!contentUpdaters.contains(contentUpdater)) {
+            contentUpdaters.add(contentUpdater);
         }
-        contentUpdaters.put(contentUpdater.getType(), contentUpdater);
     }
 
 }

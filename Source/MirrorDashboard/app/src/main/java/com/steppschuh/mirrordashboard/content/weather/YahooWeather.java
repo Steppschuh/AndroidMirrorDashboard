@@ -195,7 +195,7 @@ public class YahooWeather extends ContentProvider {
             return R.drawable.weather_rain;
         } else if (description.contains("thunder")) {
             return R.drawable.weather_thunder;
-        } else if (description.contains("clear") || description.contains("fair") || description.contains("hot")) {
+        } else if (description.contains("sunny") || description.contains("clear") || description.contains("fair") || description.contains("hot")) {
             return R.drawable.weather_sun;
         }
 

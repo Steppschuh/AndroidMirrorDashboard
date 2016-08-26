@@ -105,6 +105,10 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
         placeTracking.addTopic(PlaceTracking.TOPIC_ID_HOME, getString(R.string.location_home));
         contentManager.addContentUpdater(placeTracking);
 
+        placeTracking = new PlaceTracking(PlaceTracking.USER_ID_LENA, "Lena");
+        placeTracking.addTopic(PlaceTracking.TOPIC_ID_HOME, getString(R.string.location_home));
+        contentManager.addContentUpdater(placeTracking);
+
         contentManager.startAllContentUpdaters();
     }
 

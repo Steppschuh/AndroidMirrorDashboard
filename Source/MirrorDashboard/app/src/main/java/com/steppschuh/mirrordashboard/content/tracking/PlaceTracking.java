@@ -85,7 +85,7 @@ public class PlaceTracking extends ContentProvider
 
     public long getLatestTopicId() {
         long latestTopicId = -1;
-        long latestChangeTimestamp = -1;
+        long latestChangeTimestamp = 0;
         for (Map.Entry<Long, Location> locationEntry : locations.entrySet()) {
             long currentChangeTimestamp = locationEntry.getValue().getChangeTimestamp();
             if (currentChangeTimestamp > latestChangeTimestamp) {

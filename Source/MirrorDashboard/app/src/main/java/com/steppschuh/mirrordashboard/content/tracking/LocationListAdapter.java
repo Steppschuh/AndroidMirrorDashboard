@@ -52,7 +52,7 @@ public class LocationListAdapter extends ArrayAdapter<Location> {
         Location location = locations.get(position);
 
         TextView change = (TextView) transitLayout.findViewById(R.id.locationChange);
-        change.setText(location.getReadableTime(context));
+        change.setText(location.getReadablePassedTime(context));
 
         TextView description = (TextView) transitLayout.findViewById(R.id.locationDescription);
         String destinationText = location.getReadableDescription(context);
