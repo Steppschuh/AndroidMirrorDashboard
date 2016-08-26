@@ -119,11 +119,16 @@ public class Location extends Content {
 
     @Override
     public String toString() {
-        return new StringBuilder(subject)
-                .append(" ").append(action)
-                .append(" ").append(place)
-                .append(" ").append(new Date(changeTimestamp))
-                .toString();
+        StringBuilder sb = new StringBuilder("Location")
+                .append(" Subject: ").append(subject)
+                .append(", Place: ").append(place);
+        if (action != null) {
+            sb.append(", Action: ").append(action);
+        }
+        if (changeTimestamp > 0) {
+            sb.append(", Change: ").append(new Date(changeTimestamp));
+        }
+        return sb.toString();
     }
 
     public String getSubject() {

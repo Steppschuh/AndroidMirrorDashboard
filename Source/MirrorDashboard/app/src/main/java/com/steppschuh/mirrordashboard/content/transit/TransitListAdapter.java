@@ -9,8 +9,11 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.steppschuh.mirrordashboard.R;
+import com.steppschuh.mirrordashboard.content.tracking.Location;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class TransitListAdapter extends ArrayAdapter<Transit> {
@@ -62,6 +65,22 @@ public class TransitListAdapter extends ArrayAdapter<Transit> {
         note.setText(transit.getNote());
 
         return transitLayout;
+    }
+
+    @Override
+    public void notifyDataSetChanged()
+    {
+        super.notifyDataSetChanged();
+    }
+
+    public void removeDepartedTransits() {
+        List<Transit> departedTransits = new ArrayList<>();
+        for (Transit transit : transits) {
+            if (transit.getDeparture() < System.currentTimeMillis()) {
+                departedTransits.add(transit);
+            }
+        }
+        transits.removeAll(departedTransits);
     }
 
     private float getAlpha(int position) {

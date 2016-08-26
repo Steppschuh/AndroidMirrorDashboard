@@ -56,6 +56,7 @@ public class SinglePlaceTracking extends ContentProvider {
                 .append("actions/get/)")
                 .append("?userId=").append(userId)
                 .append("&topicId=").append(topicId)
+                .append("&limit=1")
                 .toString();
     }
 

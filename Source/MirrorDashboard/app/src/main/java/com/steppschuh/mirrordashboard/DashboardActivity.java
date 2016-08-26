@@ -119,7 +119,7 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
 
         // Transit content
         String stationId = DeutscheBahn.STATION_POTSDAM_CHARLOTTENHOF;
-        String language = DeutscheBahn.LANGUAGE_ENGLISH;
+        String language = DeutscheBahn.LANGUAGE_GERMAN;
         DeutscheBahn deutscheBahn = new DeutscheBahn(stationId, language);
         contentManager.addContentUpdater(deutscheBahn);
 
@@ -127,11 +127,13 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
         PlaceTracking placeTracking = new PlaceTracking(PlaceTracking.USER_ID_STEPHAN, "Stephan");
         placeTracking.addTopic(PlaceTracking.TOPIC_ID_WORK, getString(R.string.location_work));
         placeTracking.addTopic(PlaceTracking.TOPIC_ID_HOME, getString(R.string.location_home));
+        placeTracking.addTopic(PlaceTracking.TOPIC_ID_POTSDAM_CENTRAL_STATION, getString(R.string.location_potsdam_central_station));
         contentManager.addContentUpdater(placeTracking);
 
         placeTracking = new PlaceTracking(PlaceTracking.USER_ID_LENA, "Lena");
         placeTracking.addTopic(PlaceTracking.TOPIC_ID_HOME, getString(R.string.location_home));
         placeTracking.addTopic(PlaceTracking.TOPIC_ID_UNIVERSITY, getString(R.string.location_university));
+        placeTracking.addTopic(PlaceTracking.TOPIC_ID_POTSDAM_CENTRAL_STATION, getString(R.string.location_potsdam_central_station));
         contentManager.addContentUpdater(placeTracking);
 
         // start updating content
@@ -196,6 +198,7 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
 
         transits.trimNextTransits(Transits.TRANSITS_COUNT_DEFAULT);
         transitListAdapter.setTransits(transits.getNextTransits());
+        transitListAdapter.removeDepartedTransits();
         transitListAdapter.notifyDataSetChanged();
     }
 
@@ -212,6 +215,9 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
      */
     private void startRefreshingScreen() {
         try {
+            if (shouldRefreshScreen) {
+                throw new Exception("Screen refreshing has already been started");
+            }
             shouldRefreshScreen = true;
             Runnable runnable = new Runnable() {
                 @Override
@@ -245,7 +251,13 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
      * so that e.g. displayed times are up to date
      */
     private void refreshScreen() {
+        Log.v(TAG, "Refreshing screen");
+
+        // Location content
         locationListAdapter.notifyDataSetChanged();
+
+        // Transit content
+        transitListAdapter.removeDepartedTransits();
         transitListAdapter.notifyDataSetChanged();
     }
 
