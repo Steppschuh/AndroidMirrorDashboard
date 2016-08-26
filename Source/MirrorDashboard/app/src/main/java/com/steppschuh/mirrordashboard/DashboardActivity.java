@@ -95,7 +95,7 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
 
         // transit
         String stationId = DeutscheBahn.STATION_POTSDAM_CHARLOTTENHOF;
-        String language = DeutscheBahn.LANGUAGE_GERMAN;
+        String language = DeutscheBahn.LANGUAGE_ENGLISH;
         DeutscheBahn deutscheBahn = new DeutscheBahn(stationId, language);
         contentManager.addContentUpdater(deutscheBahn);
 

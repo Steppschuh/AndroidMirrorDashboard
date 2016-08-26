@@ -85,7 +85,7 @@ public final class SlackLog {
 
     public static void e(String tag, String message, Exception exception) {
         Log.e(tag, message + ": " + exception.getMessage());
-        Attachment attachment = generateAttachment(ERROR, tag, message);
+        Attachment attachment = generateAttachment(ERROR, tag, message + ": " + exception.getMessage());
 
         List<AttachmentField> fields = new ArrayList<>();
         StackTraceElement[] traces = exception.getStackTrace();

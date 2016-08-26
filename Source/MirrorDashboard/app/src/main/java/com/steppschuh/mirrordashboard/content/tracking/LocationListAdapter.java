@@ -81,7 +81,7 @@ public class LocationListAdapter extends ArrayAdapter<Location> {
         Location existingLocation = getLocation(location);
         if (existingLocation != null) {
             if (location.getChangeTimestamp() > existingLocation.getChangeTimestamp()) {
-                SlackLog.v(TAG, "Location changed: " + location.getReadableString(context));
+                SlackLog.i(TAG, "Location changed: " + location.getReadableString(context));
             }
             locations.remove(existingLocation);
         }
