@@ -98,4 +98,13 @@ public class ContentUpdater {
     public String toString() {
         return contentProvider + " updater";
     }
+
+    public long getInterval() {
+        return interval;
+    }
+
+    public void setInterval(long interval) {
+        this.interval = interval;
+    }
+
 }

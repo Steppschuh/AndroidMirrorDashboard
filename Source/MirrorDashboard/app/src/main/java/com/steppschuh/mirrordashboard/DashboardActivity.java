@@ -32,6 +32,7 @@ import com.steppschuh.mirrordashboard.pattern.PatternMatchedListener;
 import com.steppschuh.mirrordashboard.pattern.PatternRecordedListener;
 import com.steppschuh.mirrordashboard.pattern.recorder.GenericPatternRecorder;
 import com.steppschuh.mirrordashboard.request.SlackLog;
+import com.steppschuh.mirrordashboard.util.ScreenBrightness;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -68,7 +69,6 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
 
         setupUi();
         setupContent();
-        maximizeScreenBrightness();
         logAppStart();
     }
 
@@ -256,7 +256,7 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
                     }
                 }
             };
-            screenRefreshHandler.postDelayed(runnable, SCREEN_REFRESH_INTERVAL);
+            screenRefreshHandler.postDelayed(runnable, 100);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -272,7 +272,14 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
      */
     private void refreshScreen() {
         Log.v(TAG, "Refreshing screen");
-        setScreenBrightness(getAdjustedScreenBrightness());
+
+        // Adjust screen brightness
+        float screenBrightness = ScreenBrightness.getRecommendedScreenBrightness();
+        ScreenBrightness.from(getWindow()).setScreenBrightness(screenBrightness);
+
+        // Adjust content update interval
+        float intervalFactor = ContentManager.getRecommendedUpdateIntervalFactor();
+        contentManager.adjustUpdateInterval(intervalFactor);
 
         // Location content
         locationListAdapter.notifyDataSetChanged();
@@ -280,7 +287,6 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
         // Transit content
         transitListAdapter.removeDepartedTransits();
         transitListAdapter.notifyDataSetChanged();
-
     }
 
     /**
@@ -304,38 +310,7 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
                     | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
     }
 
-    private void maximizeScreenBrightness() {
-        setScreenBrightness(1f);
-    }
 
-    /**
-     * Sets the device's screen brightness based on the current
-     * condition
-     */
-    private float getAdjustedScreenBrightness() {
-        Date now = new Date();
-        Calendar calendar = GregorianCalendar.getInstance();
-        calendar.setTime(now);
-        int hour = calendar.get(Calendar.HOUR_OF_DAY);
-
-        if (hour >= 23 || hour <= 6) {
-            return 0.33f;
-        } else if (hour >= 21 || hour <= 8) {
-            return 0.66f;
-        } else {
-            return 1f;
-        }
-    }
-
-    /**
-     * Adjusts the device's screen brightness
-     * @param value between 0 and 1
-     */
-    private void setScreenBrightness(float value) {
-        WindowManager.LayoutParams layout = getWindow().getAttributes();
-        layout.screenBrightness = value;
-        getWindow().setAttributes(layout);
-    }
 
     /**
      * Reports an event to Slack with details about the currently started app

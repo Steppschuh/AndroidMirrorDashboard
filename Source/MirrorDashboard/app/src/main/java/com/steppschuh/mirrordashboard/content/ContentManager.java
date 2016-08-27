@@ -3,6 +3,9 @@ package com.steppschuh.mirrordashboard.content;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,6 +70,42 @@ public class ContentManager implements ContentUpdateListener {
     public void addContentUpdater(ContentUpdater contentUpdater) {
         if (!contentUpdaters.contains(contentUpdater)) {
             contentUpdaters.add(contentUpdater);
+        }
+    }
+
+    /**
+     * Alters the update interval of all {@link ContentUpdater}s by the
+     * specified factor.
+     *
+     * A factor of 2 would would result in content only updating half
+     * as often.
+     */
+    public void adjustUpdateInterval(float factor) {
+        for (ContentUpdater contentUpdater : contentUpdaters) {
+            long defaultInterval = ContentUpdater.getDefaultUpdateInterval(contentUpdater.getType());
+            long adjustedInterval = Math.round(defaultInterval * factor);
+            contentUpdater.setInterval(adjustedInterval);
+        }
+    }
+
+    /**
+     * Returns a recommended update interval based on the current
+     * condition
+     */
+    public static float getRecommendedUpdateIntervalFactor() {
+        Date now = new Date();
+        Calendar calendar = GregorianCalendar.getInstance();
+        calendar.setTime(now);
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+
+        if (hour <= 6) {
+            return 5f;
+        } else if (hour >= 23) {
+            return 3f;
+        } else if (hour >= 7 && hour <= 8) {
+            return 0.66f;
+        } else {
+            return 1f;
         }
     }
 
