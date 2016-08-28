@@ -4,12 +4,9 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.Process;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -18,9 +15,9 @@ import com.steppschuh.mirrordashboard.content.Content;
 import com.steppschuh.mirrordashboard.content.ContentManager;
 import com.steppschuh.mirrordashboard.content.ContentUpdateListener;
 import com.steppschuh.mirrordashboard.content.ContentUpdater;
-import com.steppschuh.mirrordashboard.content.tracking.Location;
-import com.steppschuh.mirrordashboard.content.tracking.LocationListAdapter;
-import com.steppschuh.mirrordashboard.content.tracking.PlaceTracking;
+import com.steppschuh.mirrordashboard.content.location.Location;
+import com.steppschuh.mirrordashboard.content.location.LocationListAdapter;
+import com.steppschuh.mirrordashboard.content.location.PlaceTracking;
 import com.steppschuh.mirrordashboard.content.transit.DeutscheBahn;
 import com.steppschuh.mirrordashboard.content.transit.TransitListAdapter;
 import com.steppschuh.mirrordashboard.content.transit.Transits;
@@ -29,14 +26,10 @@ import com.steppschuh.mirrordashboard.content.weather.YahooWeather;
 import com.steppschuh.mirrordashboard.pattern.Pattern;
 import com.steppschuh.mirrordashboard.pattern.PatternManager;
 import com.steppschuh.mirrordashboard.pattern.PatternMatchedListener;
-import com.steppschuh.mirrordashboard.pattern.PatternRecordedListener;
-import com.steppschuh.mirrordashboard.pattern.recorder.GenericPatternRecorder;
+import com.steppschuh.mirrordashboard.pattern.recorder.audio.AudioPatternRecorder;
 import com.steppschuh.mirrordashboard.request.SlackLog;
 import com.steppschuh.mirrordashboard.util.ScreenBrightness;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.concurrent.TimeUnit;
 
 public class DashboardActivity extends AppCompatActivity implements ContentUpdateListener, PatternMatchedListener {
@@ -69,6 +62,7 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
 
         setupUi();
         setupContent();
+        setupPatterns();
         logAppStart();
     }
 
@@ -116,11 +110,21 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
     private void setupPatterns() {
         patternManager = new PatternManager();
         patternManager.registerPatternListener(this);
+
+        // simple pattern to trigger whatever
+        patternManager.registerPattern(Pattern.createPattern(
+                Pattern.HIGH,
+                Pattern.HIGH,
+                Pattern.HIGH
+        ));
+
+        // register pattern recorder
+        patternManager.startAndRegisterPatternRecorder(new AudioPatternRecorder());
     }
 
     @Override
     public void onPatternDetected(Pattern pattern) {
-        Log.d(TAG, "Pattern detected: " + pattern);
+        SlackLog.d(TAG, "Pattern detected: " + pattern);
     }
 
     /**

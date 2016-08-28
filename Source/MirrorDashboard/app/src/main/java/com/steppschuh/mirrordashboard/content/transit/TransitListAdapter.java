@@ -9,11 +9,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.steppschuh.mirrordashboard.R;
-import com.steppschuh.mirrordashboard.content.tracking.Location;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 public class TransitListAdapter extends ArrayAdapter<Transit> {
