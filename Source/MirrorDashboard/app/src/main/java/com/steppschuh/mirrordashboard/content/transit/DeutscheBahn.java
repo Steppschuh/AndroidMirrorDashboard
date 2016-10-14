@@ -18,6 +18,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 public class DeutscheBahn extends ContentProvider {
 
@@ -116,10 +117,13 @@ public class DeutscheBahn extends ContentProvider {
     }
 
     private static String getRequestUrl(String stationId, String language) {
+        long rounding = TimeUnit.MINUTES.toMillis(1);
+        long roundedTimestamp = Math.round(System.currentTimeMillis() / rounding) * rounding;
         String url = new StringBuilder(EXTRACTLY_ENDPOINT)
                 .append(EXTRACTLY_TOKEN)
                 .append("/?stopId=").append(stationId)
                 .append("&language=").append(language)
+                .append("&timestamp=").append(roundedTimestamp) // invalidate cache
                 .toString();
 
         return url;
