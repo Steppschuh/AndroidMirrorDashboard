@@ -43,8 +43,10 @@ public class AudioPatternRecorder extends GenericPatternRecorder {
             stopRecordingPatterns();
         }
         initializeAudioRecord();
-        audioRecord.startRecording();
-        startPatternExtraction();
+        if (audioRecord != null) {
+            audioRecord.startRecording();
+            startPatternExtraction();
+        }
     }
 
     @Override

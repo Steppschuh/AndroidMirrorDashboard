@@ -205,7 +205,7 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
      */
     @Override
     public void onContentUpdateFailed(ContentUpdater contentUpdater, Exception exception) {
-        SlackLog.e(TAG, contentUpdater + " failed to update content", exception);
+        Log.e(TAG, contentUpdater + " failed to update content", exception);
         exception.printStackTrace();
     }
 

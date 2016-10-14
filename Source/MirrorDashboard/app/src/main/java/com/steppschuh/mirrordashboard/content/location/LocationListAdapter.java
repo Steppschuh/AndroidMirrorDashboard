@@ -84,6 +84,8 @@ public class LocationListAdapter extends ArrayAdapter<Location> {
             }
             locations.remove(existingLocation);
         }
+        List<Location> otherLocationsBySubject = getLocationsBySubject(location.getSubject());
+        locations.removeAll(otherLocationsBySubject);
         locations.add(location);
     }
 
@@ -104,7 +106,18 @@ public class LocationListAdapter extends ArrayAdapter<Location> {
         return null;
     }
 
-    public List<Location> getLocations() {
+    public List<Location> getLocationsBySubject(String subject) {
+        List<Location> existingLocations = new ArrayList<>();
+        for (Location location : locations) {
+            if (!location.getSubject().equals(subject)) {
+                continue;
+            }
+            existingLocations.add(location);
+        }
+        return existingLocations;
+    }
+
+    public List<Location> getLocationsBySubject() {
         return locations;
     }
 
