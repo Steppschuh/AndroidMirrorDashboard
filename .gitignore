@@ -1,2 +1,3 @@
 .gradle
 .DS_Store
+Source/MirrorDashboard/keystore.properties

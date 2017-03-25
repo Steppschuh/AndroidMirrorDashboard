@@ -1,5 +1,9 @@
 apply plugin: 'com.android.application'
 
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+
 android {
     compileSdkVersion 23
     buildToolsVersion '25.0.0'
@@ -17,6 +21,10 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+    buildTypes.each {
+        it.buildConfigField 'String', 'MAKER_CHANNEL_KEY', keystoreProperties['MAKER_CHANNEL_KEY']
+        it.buildConfigField 'String', 'SLACK_WEBHOOK_URL', keystoreProperties['SLACK_WEBHOOK_URL']
     }
     productFlavors {
     }
