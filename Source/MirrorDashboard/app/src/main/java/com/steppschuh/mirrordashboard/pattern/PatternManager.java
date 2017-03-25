@@ -68,6 +68,7 @@ public class PatternManager implements PatternRecordedListener {
 
     public void registerPatternRecorder(PatternRecorder patternRecorder) {
         if (!patternRecorders.contains(patternRecorder)) {
+            patternRecorder.registerPatternRecordedListener(this);
             patternRecorders.add(patternRecorder);
         } else {
             Log.w(TAG, "Attempted to register a duplicate PatternRecorder: " + patternRecorder);
@@ -76,6 +77,7 @@ public class PatternManager implements PatternRecordedListener {
 
     public void unregisterPatternRecorder(PatternRecorder patternRecorder) {
         if (patternRecorders.contains(patternRecorder)) {
+            patternRecorder.unregisterPatternRecordedListener(this);
             patternRecorders.remove(patternRecorder);
         } else {
             Log.w(TAG, "Attempted to unregister a PatternRecorder that isn't registered: " + patternRecorder);

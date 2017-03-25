@@ -1,4 +1,4 @@
-package com.steppschuh.mirrordashboard.content.tracking;
+package com.steppschuh.mirrordashboard.content.location;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.logging.Logger;
 
 public class LocationListAdapter extends ArrayAdapter<Location> {
 
@@ -66,8 +65,7 @@ public class LocationListAdapter extends ArrayAdapter<Location> {
     }
 
     @Override
-    public void notifyDataSetChanged()
-    {
+    public void notifyDataSetChanged() {
         Collections.sort(locations, new Comparator<Location>() {
             @Override
             public int compare(Location location1, Location location2) {
@@ -85,6 +83,8 @@ public class LocationListAdapter extends ArrayAdapter<Location> {
             }
             locations.remove(existingLocation);
         }
+        List<Location> otherLocationsBySubject = getLocationsBySubject(location.getSubject());
+        locations.removeAll(otherLocationsBySubject);
         locations.add(location);
     }
 
@@ -105,7 +105,18 @@ public class LocationListAdapter extends ArrayAdapter<Location> {
         return null;
     }
 
-    public List<Location> getLocations() {
+    public List<Location> getLocationsBySubject(String subject) {
+        List<Location> existingLocations = new ArrayList<>();
+        for (Location location : locations) {
+            if (!location.getSubject().equals(subject)) {
+                continue;
+            }
+            existingLocations.add(location);
+        }
+        return existingLocations;
+    }
+
+    public List<Location> getLocationsBySubject() {
         return locations;
     }
 

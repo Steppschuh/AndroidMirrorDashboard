@@ -22,6 +22,10 @@ public class Pattern<T extends PatternItem> {
     }
 
     public boolean matches(List<T> otherPatternSequence) {
+        return matches(patternSequence, otherPatternSequence);
+    }
+
+    public static boolean matches(List<? extends PatternItem> patternSequence, List<? extends PatternItem> otherPatternSequence) {
         if (patternSequence.size() != otherPatternSequence.size()) {
             return false;
         }
@@ -46,6 +50,32 @@ public class Pattern<T extends PatternItem> {
             patternSequence.add(new GenericPatternItem(value));
         }
         return patternSequence;
+    }
+
+    /**
+     * Extracts all valid patterns from a given list of {@link PatternItem}s.
+     *
+     * @param patternSequence
+     * @return
+     */
+    public static List<Pattern> extractPatternsFromSequence(List<? extends PatternItem> patternSequence) {
+        List<Pattern> patterns = new ArrayList<>();
+        for (int patternLength = Pattern.MINIMUM_PATTERN_LENGTH; patternLength <= Pattern.MAXIMUM_PATTERN_LENGTH; patternLength++) {
+            if (patternLength > patternSequence.size()) {
+                break;
+            }
+            int startIndex = patternSequence.size() - patternLength;
+            int endIndex = patternSequence.size();
+            List<? extends PatternItem> patternItems = patternSequence.subList(startIndex, endIndex);
+            Pattern<PatternItem> pattern = new Pattern<>(new ArrayList<>(patternItems));
+            patterns.add(pattern);
+        }
+        return patterns;
+    }
+
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName() + ": " + patternSequence.toString();
     }
 
     public List<T> getPatternSequence() {

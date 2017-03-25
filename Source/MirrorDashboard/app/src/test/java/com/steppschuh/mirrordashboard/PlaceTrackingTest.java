@@ -1,8 +1,7 @@
 package com.steppschuh.mirrordashboard;
 
-import com.steppschuh.mirrordashboard.content.tracking.Location;
-import com.steppschuh.mirrordashboard.content.tracking.PlaceTracking;
-import com.steppschuh.mirrordashboard.content.tracking.SinglePlaceTracking;
+import com.steppschuh.mirrordashboard.content.location.Location;
+import com.steppschuh.mirrordashboard.content.location.PlaceTracking;
 
 import org.junit.Test;
 

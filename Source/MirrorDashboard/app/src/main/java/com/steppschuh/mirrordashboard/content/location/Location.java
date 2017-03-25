@@ -1,4 +1,4 @@
-package com.steppschuh.mirrordashboard.content.tracking;
+package com.steppschuh.mirrordashboard.content.location;
 
 import android.content.Context;
 import android.util.Log;

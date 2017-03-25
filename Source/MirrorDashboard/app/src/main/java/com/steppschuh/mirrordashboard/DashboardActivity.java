@@ -4,12 +4,9 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.Process;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -18,9 +15,9 @@ import com.steppschuh.mirrordashboard.content.Content;
 import com.steppschuh.mirrordashboard.content.ContentManager;
 import com.steppschuh.mirrordashboard.content.ContentUpdateListener;
 import com.steppschuh.mirrordashboard.content.ContentUpdater;
-import com.steppschuh.mirrordashboard.content.tracking.Location;
-import com.steppschuh.mirrordashboard.content.tracking.LocationListAdapter;
-import com.steppschuh.mirrordashboard.content.tracking.PlaceTracking;
+import com.steppschuh.mirrordashboard.content.location.Location;
+import com.steppschuh.mirrordashboard.content.location.LocationListAdapter;
+import com.steppschuh.mirrordashboard.content.location.PlaceTracking;
 import com.steppschuh.mirrordashboard.content.transit.DeutscheBahn;
 import com.steppschuh.mirrordashboard.content.transit.TransitListAdapter;
 import com.steppschuh.mirrordashboard.content.transit.Transits;
@@ -29,9 +26,9 @@ import com.steppschuh.mirrordashboard.content.weather.YahooWeather;
 import com.steppschuh.mirrordashboard.pattern.Pattern;
 import com.steppschuh.mirrordashboard.pattern.PatternManager;
 import com.steppschuh.mirrordashboard.pattern.PatternMatchedListener;
-import com.steppschuh.mirrordashboard.pattern.PatternRecordedListener;
-import com.steppschuh.mirrordashboard.pattern.recorder.GenericPatternRecorder;
+import com.steppschuh.mirrordashboard.pattern.recorder.audio.AudioPatternRecorder;
 import com.steppschuh.mirrordashboard.request.SlackLog;
+import com.steppschuh.mirrordashboard.util.ScreenBrightness;
 
 import java.util.concurrent.TimeUnit;
 
@@ -39,6 +36,7 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
 
     private static final String TAG = DashboardActivity.class.getSimpleName();
     private static final long SCREEN_REFRESH_INTERVAL = TimeUnit.SECONDS.toMillis(30);
+    private static final long DETECTED_ACTIVITY_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
 
     private boolean shouldRefreshScreen = false;
     private Handler screenRefreshHandler = new Handler();
@@ -58,6 +56,10 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
     private ListView locationList;
     private LocationListAdapter locationListAdapter;
 
+    private Pattern fromUsualToUnusualPattern;
+    private Pattern fromUnusualToUsualPattern;
+    private long lastActivityTimestamp;
+
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
@@ -65,7 +67,7 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
 
         setupUi();
         setupContent();
-        maximizeScreenBrightness();
+        setupPatterns();
         logAppStart();
     }
 
@@ -77,8 +79,7 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
     }
 
     @Override
-    protected void onPause()
-    {
+    protected void onPause() {
         stopRefreshingScreen();
         super.onPause();
     }
@@ -113,11 +114,34 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
     private void setupPatterns() {
         patternManager = new PatternManager();
         patternManager.registerPatternListener(this);
+        patternManager.startAndRegisterPatternRecorder(new AudioPatternRecorder());
+
+        // indicates that something started disturbing the usual atmosphere
+        fromUsualToUnusualPattern = Pattern.createPattern(
+                Pattern.LOW, Pattern.LOW, Pattern.LOW, Pattern.LOW, Pattern.LOW,
+                Pattern.HIGH
+        );
+        patternManager.registerPattern(fromUsualToUnusualPattern);
+
+        // indicates that the atmosphere is not being disturbed anymore
+        fromUnusualToUsualPattern = Pattern.createPattern(
+                Pattern.HIGH,
+                Pattern.LOW, Pattern.LOW, Pattern.LOW, Pattern.LOW, Pattern.LOW
+        );
+        patternManager.registerPattern(fromUnusualToUsualPattern);
     }
 
     @Override
     public void onPatternDetected(Pattern pattern) {
-        Log.d(TAG, "Pattern detected: " + pattern);
+        if (pattern == fromUsualToUnusualPattern) {
+            Log.i(TAG, "Something started disturbing the usual atmosphere");
+            lastActivityTimestamp = System.currentTimeMillis();
+            adjustScreenBrightness();
+        } else if (pattern == fromUnusualToUsualPattern) {
+            Log.i(TAG, "The atmosphere is not being disturbed anymore");
+        } else {
+            Log.w(TAG, "Unknown pattern detected: " + pattern);
+        }
     }
 
     /**
@@ -198,13 +222,12 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
      */
     @Override
     public void onContentUpdateFailed(ContentUpdater contentUpdater, Exception exception) {
-        SlackLog.e(TAG, contentUpdater + " failed to update content", exception);
+        Log.e(TAG, contentUpdater + " failed to update content", exception);
         exception.printStackTrace();
     }
 
     private void renderWeather(Weather weather) {
         Log.v(TAG, "Weather updated: " + weather);
-
         weatherTemperature.setText(weather.getReadableTemperature());
         weatherDescription.setText(weather.getReadableTemperatureRange());
         weatherIcon.setImageResource(YahooWeather.getConditionIcon(weather.getForecastCondition()));
@@ -212,7 +235,6 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
 
     private void renderTransit(Transits transits) {
         Log.v(TAG, "Transit updated: " + transits);
-
         transits.trimNextTransits(Transits.TRANSITS_COUNT_DEFAULT);
         transitListAdapter.setTransits(transits.getNextTransits());
         transitListAdapter.removeDepartedTransits();
@@ -253,7 +275,7 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
                     }
                 }
             };
-            screenRefreshHandler.postDelayed(runnable, SCREEN_REFRESH_INTERVAL);
+            screenRefreshHandler.postDelayed(runnable, 100);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -270,6 +292,12 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
     private void refreshScreen() {
         Log.v(TAG, "Refreshing screen");
 
+        adjustScreenBrightness();
+
+        // Adjust content update interval
+        float intervalFactor = ContentManager.getRecommendedUpdateIntervalFactor();
+        contentManager.adjustUpdateInterval(intervalFactor);
+
         // Location content
         locationListAdapter.notifyDataSetChanged();
 
@@ -279,15 +307,40 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
     }
 
     /**
+     * Changes the screen brightness, based on the current time and recent activity.
+     */
+    private void adjustScreenBrightness() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                float screenBrightness = ScreenBrightness.getRecommendedScreenBrightness();
+                if (!hasRecentlyDetectedActivity()) {
+                    screenBrightness *= ScreenBrightness.INACTIVITY_BRIGHTNESS_FACTOR;
+                }
+                ScreenBrightness.from(getWindow()).setScreenBrightness(screenBrightness);
+            }
+        });
+    }
+
+    /**
+     * Indicates if there has been some activity detected recently.
+     *
+     * @return
+     */
+    private boolean hasRecentlyDetectedActivity() {
+        return lastActivityTimestamp > System.currentTimeMillis() - DETECTED_ACTIVITY_TIMEOUT;
+    }
+
+    /**
      * Hides all system views and leaves the app in fullscreen mode
      */
     private void hideSystemUI() {
         decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
-                    | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
-                    | View.SYSTEM_UI_FLAG_IMMERSIVE);
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
+                | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
+                | View.SYSTEM_UI_FLAG_IMMERSIVE);
     }
 
     /**
@@ -295,23 +348,10 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
      */
     private void showSystemUI() {
         decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
     }
 
-    private void maximizeScreenBrightness() {
-        setScreenBrightness(1f);
-    }
-
-    /**
-     * Adjusts the device's screen brightness
-     * @param value between 0 and 1
-     */
-    private void setScreenBrightness(float value) {
-        WindowManager.LayoutParams layout = getWindow().getAttributes();
-        layout.screenBrightness = value;
-        getWindow().setAttributes(layout);
-    }
 
     /**
      * Reports an event to Slack with details about the currently started app

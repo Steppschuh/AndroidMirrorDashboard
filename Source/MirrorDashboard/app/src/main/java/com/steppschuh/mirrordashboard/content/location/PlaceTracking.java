@@ -1,4 +1,4 @@
-package com.steppschuh.mirrordashboard.content.tracking;
+package com.steppschuh.mirrordashboard.content.location;
 
 import android.util.Log;
 
@@ -8,13 +8,12 @@ import com.steppschuh.mirrordashboard.content.ContentProvider;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PlaceTracking extends ContentProvider
-{
+public class PlaceTracking extends ContentProvider {
 
     /**
      * This provider fetches its data from the PlaceTracking API,
      * which is an open-source project powered by the Google App Engine.
-     *
+     * <p>
      * You need to create you own user and topic IDs (using simple get
      * requests, no sign up required), here's how:
      * https://github.com/Steppschuh/PlaceTracking
@@ -36,8 +35,7 @@ public class PlaceTracking extends ContentProvider
     private HashMap<Long, Location> locations = new HashMap<>();
     private HashMap<Long, SinglePlaceTracking> locationProviders = new HashMap<>();
 
-    public PlaceTracking(long subjectId, String subjectName)
-    {
+    public PlaceTracking(long subjectId, String subjectName) {
         super(Content.TYPE_LOCATION);
         this.subjectId = subjectId;
         this.subjectName = subjectName;

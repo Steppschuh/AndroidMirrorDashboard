@@ -27,8 +27,7 @@ public class Transit extends Content {
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return new StringBuilder(getReadableTime())
                 .append(" - ").append(tripId)
                 .append(" to ").append(destination)

@@ -1,4 +1,4 @@
-package com.steppschuh.mirrordashboard.content.tracking;
+package com.steppschuh.mirrordashboard.content.location;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;

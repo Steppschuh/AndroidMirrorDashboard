@@ -1,5 +1,7 @@
 package com.steppschuh.mirrordashboard.request;
 
+import com.steppschuh.mirrordashboard.BuildConfig;
+
 import net.steppschuh.slackmessagebuilder.request.Webhook;
 
 import java.io.BufferedInputStream;
@@ -17,8 +19,8 @@ public final class RequestHelper {
 
     public static final String TAG = RequestHelper.class.getSimpleName();
 
-    private static final String MAKER_CHANNEL_KEY = "bW8z9ewK1L18EMgb3kuS59";
-    private static final String SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/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";
+    private static final String MAKER_CHANNEL_KEY = BuildConfig.MAKER_CHANNEL_KEY;
+    private static final String SLACK_WEBHOOK_URL = BuildConfig.SLACK_WEBHOOK_URL;
 
     private static final MakerChannelTrigger makerChannelTrigger = new MakerChannelTrigger(MAKER_CHANNEL_KEY);
     private static Webhook slackWebhook = new Webhook(SLACK_WEBHOOK_URL);

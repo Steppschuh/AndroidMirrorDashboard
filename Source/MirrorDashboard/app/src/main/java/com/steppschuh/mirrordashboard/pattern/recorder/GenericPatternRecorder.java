@@ -12,7 +12,7 @@ public abstract class GenericPatternRecorder implements PatternRecorder {
 
     private static final String TAG = GenericPatternRecorder.class.getSimpleName();
 
-    List<PatternRecordedListener> patternRecordedListeners = new ArrayList<>();
+    protected List<PatternRecordedListener> patternRecordedListeners = new ArrayList<>();
 
     @Override
     public void registerPatternRecordedListener(PatternRecordedListener patternRecordedListener) {
