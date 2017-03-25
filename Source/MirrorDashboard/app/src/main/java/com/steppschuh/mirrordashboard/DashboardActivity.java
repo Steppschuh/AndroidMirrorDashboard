@@ -62,7 +62,7 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
 
         setupUi();
         setupContent();
-        setupPatterns();
+        //setupPatterns();
         logAppStart();
     }
 
