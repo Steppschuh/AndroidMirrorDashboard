@@ -4,8 +4,7 @@ public class GenericPatternItem implements PatternItem {
 
     int value;
 
-    public GenericPatternItem(int value)
-    {
+    public GenericPatternItem(int value) {
         this.value = value;
     }
 
@@ -15,8 +14,7 @@ public class GenericPatternItem implements PatternItem {
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return String.valueOf(getPatternValue());
     }
 

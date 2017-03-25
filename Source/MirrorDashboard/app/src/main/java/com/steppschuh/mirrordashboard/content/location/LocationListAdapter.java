@@ -65,8 +65,7 @@ public class LocationListAdapter extends ArrayAdapter<Location> {
     }
 
     @Override
-    public void notifyDataSetChanged()
-    {
+    public void notifyDataSetChanged() {
         Collections.sort(locations, new Comparator<Location>() {
             @Override
             public int compare(Location location1, Location location2) {

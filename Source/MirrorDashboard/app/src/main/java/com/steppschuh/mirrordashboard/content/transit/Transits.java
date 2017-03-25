@@ -30,8 +30,7 @@ public class Transits extends Content {
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         StringBuilder sb = new StringBuilder()
                 .append(nextTransits.size())
                 .append(" transit(s):");

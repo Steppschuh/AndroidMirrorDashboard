@@ -6,9 +6,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class ContentManager implements ContentUpdateListener {
 
@@ -76,7 +74,7 @@ public class ContentManager implements ContentUpdateListener {
     /**
      * Alters the update interval of all {@link ContentUpdater}s by the
      * specified factor.
-     *
+     * <p>
      * A factor of 2 would would result in content only updating half
      * as often.
      */

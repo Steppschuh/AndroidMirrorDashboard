@@ -8,7 +8,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.steppschuh.mirrordashboard.content.Content;
 import com.steppschuh.mirrordashboard.content.ContentProvider;
-import com.steppschuh.mirrordashboard.content.weather.Weather;
 import com.steppschuh.mirrordashboard.request.RequestHelper;
 
 import java.text.SimpleDateFormat;
@@ -25,7 +24,7 @@ public class DeutscheBahn extends ContentProvider {
     /**
      * This provider fetches its data from an extracty.com endpoint,
      * which parses the official "Web-Bahnhofstafel" by DB.
-     *
+     * <p>
      * To get you local station ID, open this page and copy the "bhf" url
      * parameter from the generated URL:
      * http://aseier.de/bahn/a.html

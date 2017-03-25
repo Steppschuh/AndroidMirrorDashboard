@@ -65,8 +65,7 @@ public class TransitListAdapter extends ArrayAdapter<Transit> {
     }
 
     @Override
-    public void notifyDataSetChanged()
-    {
+    public void notifyDataSetChanged() {
         super.notifyDataSetChanged();
     }
 

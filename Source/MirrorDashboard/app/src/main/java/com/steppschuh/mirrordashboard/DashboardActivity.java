@@ -306,12 +306,20 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
         transitListAdapter.notifyDataSetChanged();
     }
 
+    /**
+     * Changes the screen brightness, based on the current time and recent activity.
+     */
     private void adjustScreenBrightness() {
-        float screenBrightness = ScreenBrightness.getRecommendedScreenBrightness();
-        if (!hasRecentlyDetectedActivity()) {
-            screenBrightness *= ScreenBrightness.INACTIVITY_BRIGHTNESS_FACTOR;
-        }
-        ScreenBrightness.from(getWindow()).setScreenBrightness(screenBrightness);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                float screenBrightness = ScreenBrightness.getRecommendedScreenBrightness();
+                if (!hasRecentlyDetectedActivity()) {
+                    screenBrightness *= ScreenBrightness.INACTIVITY_BRIGHTNESS_FACTOR;
+                }
+                ScreenBrightness.from(getWindow()).setScreenBrightness(screenBrightness);
+            }
+        });
     }
 
     /**

@@ -33,6 +33,7 @@ public final class ScreenBrightness {
 
     /**
      * Adjusts the device's screen brightness
+     *
      * @param value between 0 and 1
      */
     public void setScreenBrightness(float value) {

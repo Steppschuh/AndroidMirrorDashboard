@@ -191,7 +191,7 @@ public class YahooWeather extends ContentProvider {
             } else {
                 return R.drawable.weather_cloud;
             }
-        } else if (description.contains("showers") ||description.contains("snow")) {
+        } else if (description.contains("showers") || description.contains("snow")) {
             return R.drawable.weather_rain;
         } else if (description.contains("thunder")) {
             return R.drawable.weather_thunder;

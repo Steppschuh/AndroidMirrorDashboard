@@ -6,10 +6,13 @@ import com.steppschuh.mirrordashboard.pattern.PatternRecordedListener;
 public interface PatternRecorder {
 
     void startRecordingPatterns();
+
     void stopRecordingPatterns();
 
     void registerPatternRecordedListener(PatternRecordedListener patternRecordedListener);
+
     void unregisterPatternRecordedListener(PatternRecordedListener patternRecordedListener);
+
     void onNewPatternRecorded(Pattern pattern);
 
 }

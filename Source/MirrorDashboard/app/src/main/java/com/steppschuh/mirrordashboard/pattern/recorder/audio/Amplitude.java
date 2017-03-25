@@ -5,7 +5,6 @@ import com.steppschuh.mirrordashboard.pattern.PatternItem;
 
 import net.steppschuh.markdowngenerator.progress.ProgressBar;
 import net.steppschuh.markdowngenerator.table.TableRow;
-import net.steppschuh.markdowngenerator.text.TextBuilder;
 
 import java.util.Arrays;
 
