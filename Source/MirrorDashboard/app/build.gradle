@@ -30,6 +30,12 @@ android {
     }
 }
 
+repositories {
+    maven {
+        url  "http://dl.bintray.com/steppschuh/Markdown-Generator"
+    }
+}
+
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.android.support:multidex:1.0.1'
@@ -38,5 +44,6 @@ dependencies {
     compile 'com.google.android.gms:play-services:9.2.1'
     compile 'com.android.support:design:23.3.0'
     compile 'com.google.code.gson:gson:2.4'
+    compile 'net.steppschuh.markdowngenerator:markdowngenerator:1.3.0.0'
     compile files('libs/slackmessagebuilder.jar')
 }

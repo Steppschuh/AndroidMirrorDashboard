@@ -9,6 +9,8 @@ import java.util.GregorianCalendar;
 
 public final class ScreenBrightness {
 
+    public static final double INACTIVITY_BRIGHTNESS_FACTOR = 0.25;
+
     private static ScreenBrightness instance;
     private Window window;
 

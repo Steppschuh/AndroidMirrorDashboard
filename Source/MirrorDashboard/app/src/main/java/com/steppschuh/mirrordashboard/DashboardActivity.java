@@ -36,6 +36,7 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
 
     private static final String TAG = DashboardActivity.class.getSimpleName();
     private static final long SCREEN_REFRESH_INTERVAL = TimeUnit.SECONDS.toMillis(30);
+    private static final long DETECTED_ACTIVITY_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
 
     private boolean shouldRefreshScreen = false;
     private Handler screenRefreshHandler = new Handler();
@@ -55,6 +56,10 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
     private ListView locationList;
     private LocationListAdapter locationListAdapter;
 
+    private Pattern fromUsualToUnusualPattern;
+    private Pattern fromUnusualToUsualPattern;
+    private long lastActivityTimestamp;
+
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
@@ -62,7 +67,7 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
 
         setupUi();
         setupContent();
-        //setupPatterns();
+        setupPatterns();
         logAppStart();
     }
 
@@ -74,8 +79,7 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
     }
 
     @Override
-    protected void onPause()
-    {
+    protected void onPause() {
         stopRefreshingScreen();
         super.onPause();
     }
@@ -110,21 +114,34 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
     private void setupPatterns() {
         patternManager = new PatternManager();
         patternManager.registerPatternListener(this);
-
-        // simple pattern to trigger whatever
-        patternManager.registerPattern(Pattern.createPattern(
-                Pattern.HIGH,
-                Pattern.HIGH,
-                Pattern.HIGH
-        ));
-
-        // register pattern recorder
         patternManager.startAndRegisterPatternRecorder(new AudioPatternRecorder());
+
+        // indicates that something started disturbing the usual atmosphere
+        fromUsualToUnusualPattern = Pattern.createPattern(
+                Pattern.LOW, Pattern.LOW, Pattern.LOW, Pattern.LOW, Pattern.LOW,
+                Pattern.HIGH
+        );
+        patternManager.registerPattern(fromUsualToUnusualPattern);
+
+        // indicates that the atmosphere is not being disturbed anymore
+        fromUnusualToUsualPattern = Pattern.createPattern(
+                Pattern.HIGH,
+                Pattern.LOW, Pattern.LOW, Pattern.LOW, Pattern.LOW, Pattern.LOW
+        );
+        patternManager.registerPattern(fromUnusualToUsualPattern);
     }
 
     @Override
     public void onPatternDetected(Pattern pattern) {
-        SlackLog.d(TAG, "Pattern detected: " + pattern);
+        if (pattern == fromUsualToUnusualPattern) {
+            Log.i(TAG, "Something started disturbing the usual atmosphere");
+            lastActivityTimestamp = System.currentTimeMillis();
+            adjustScreenBrightness();
+        } else if (pattern == fromUnusualToUsualPattern) {
+            Log.i(TAG, "The atmosphere is not being disturbed anymore");
+        } else {
+            Log.w(TAG, "Unknown pattern detected: " + pattern);
+        }
     }
 
     /**
@@ -211,7 +228,6 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
 
     private void renderWeather(Weather weather) {
         Log.v(TAG, "Weather updated: " + weather);
-
         weatherTemperature.setText(weather.getReadableTemperature());
         weatherDescription.setText(weather.getReadableTemperatureRange());
         weatherIcon.setImageResource(YahooWeather.getConditionIcon(weather.getForecastCondition()));
@@ -219,7 +235,6 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
 
     private void renderTransit(Transits transits) {
         Log.v(TAG, "Transit updated: " + transits);
-
         transits.trimNextTransits(Transits.TRANSITS_COUNT_DEFAULT);
         transitListAdapter.setTransits(transits.getNextTransits());
         transitListAdapter.removeDepartedTransits();
@@ -277,9 +292,7 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
     private void refreshScreen() {
         Log.v(TAG, "Refreshing screen");
 
-        // Adjust screen brightness
-        float screenBrightness = ScreenBrightness.getRecommendedScreenBrightness();
-        ScreenBrightness.from(getWindow()).setScreenBrightness(screenBrightness);
+        adjustScreenBrightness();
 
         // Adjust content update interval
         float intervalFactor = ContentManager.getRecommendedUpdateIntervalFactor();
@@ -293,16 +306,33 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
         transitListAdapter.notifyDataSetChanged();
     }
 
+    private void adjustScreenBrightness() {
+        float screenBrightness = ScreenBrightness.getRecommendedScreenBrightness();
+        if (!hasRecentlyDetectedActivity()) {
+            screenBrightness *= ScreenBrightness.INACTIVITY_BRIGHTNESS_FACTOR;
+        }
+        ScreenBrightness.from(getWindow()).setScreenBrightness(screenBrightness);
+    }
+
+    /**
+     * Indicates if there has been some activity detected recently.
+     *
+     * @return
+     */
+    private boolean hasRecentlyDetectedActivity() {
+        return lastActivityTimestamp > System.currentTimeMillis() - DETECTED_ACTIVITY_TIMEOUT;
+    }
+
     /**
      * Hides all system views and leaves the app in fullscreen mode
      */
     private void hideSystemUI() {
         decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
-                    | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
-                    | View.SYSTEM_UI_FLAG_IMMERSIVE);
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
+                | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
+                | View.SYSTEM_UI_FLAG_IMMERSIVE);
     }
 
     /**
@@ -310,10 +340,9 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
      */
     private void showSystemUI() {
         decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
     }
-
 
 
     /**
