@@ -20,5 +20,5 @@
     <string name="heading_location">Bekannte Orte:</string>
     <string name="time_minute">Minute</string>
     <string name="location_university">in der Uni</string>
-    <string name="location_potsdam_central_station">am Potsdamer Hauptbahnhof</string>
+    <string name="location_potsdam_central_station">am Potsdamer Hbf</string>
 </resources>

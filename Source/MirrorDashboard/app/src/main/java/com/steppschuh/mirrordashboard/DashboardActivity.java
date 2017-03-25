@@ -11,6 +11,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.steppschuh.mirrordashboard.camera.CameraHelper;
 import com.steppschuh.mirrordashboard.content.Content;
 import com.steppschuh.mirrordashboard.content.ContentManager;
 import com.steppschuh.mirrordashboard.content.ContentUpdateListener;
@@ -76,11 +77,13 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
         super.onResume();
         hideSystemUI();
         startRefreshingScreen();
+        CameraHelper.openCamera(this);
     }
 
     @Override
     protected void onPause() {
         stopRefreshingScreen();
+        CameraHelper.closeCamera();
         super.onPause();
     }
 
@@ -304,6 +307,13 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
         // Transit content
         transitListAdapter.removeDepartedTransits();
         transitListAdapter.notifyDataSetChanged();
+
+        // Take picture
+        try {
+            CameraHelper.getInstance().takePicture(this);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -351,7 +361,6 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
                 | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                 | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
     }
-
 
     /**
      * Reports an event to Slack with details about the currently started app
