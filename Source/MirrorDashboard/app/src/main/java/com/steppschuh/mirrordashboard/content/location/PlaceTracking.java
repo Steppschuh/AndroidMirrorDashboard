@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.steppschuh.mirrordashboard.content.Content;
 import com.steppschuh.mirrordashboard.content.ContentProvider;
+import com.steppschuh.mirrordashboard.content.ContentUpdateException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -42,7 +43,7 @@ public class PlaceTracking extends ContentProvider {
     }
 
     @Override
-    public Content fetchContent() throws Exception {
+    public Content fetchContent() throws ContentUpdateException {
         for (Map.Entry<Long, SinglePlaceTracking> placeTrackerEntry : locationProviders.entrySet()) {
             try {
                 Location location = (Location) placeTrackerEntry.getValue().fetchContent();
@@ -53,7 +54,7 @@ public class PlaceTracking extends ContentProvider {
         }
         Location latestLocation = getLatestLocation();
         if (latestLocation == null) {
-            throw new Exception("No location data available");
+            throw new ContentUpdateException("No location data available");
         }
         return latestLocation;
     }

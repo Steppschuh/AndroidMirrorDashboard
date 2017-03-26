@@ -7,6 +7,7 @@ import com.google.gson.JsonParser;
 import com.steppschuh.mirrordashboard.R;
 import com.steppschuh.mirrordashboard.content.Content;
 import com.steppschuh.mirrordashboard.content.ContentProvider;
+import com.steppschuh.mirrordashboard.content.ContentUpdateException;
 import com.steppschuh.mirrordashboard.request.RequestHelper;
 
 import java.net.URLEncoder;
@@ -36,14 +37,18 @@ public class YahooWeather extends ContentProvider {
     }
 
     @Override
-    public Content fetchContent() throws Exception {
-        String url = getRequestUrl(woeid, unit);
-        String jsonString = RequestHelper.get(url);
+    public Content fetchContent() throws ContentUpdateException {
+        try {
+            String url = getRequestUrl(woeid, unit);
+            String jsonString = RequestHelper.get(url);
 
-        JsonParser parser = new JsonParser();
-        JsonObject jsonObject = parser.parse(jsonString).getAsJsonObject();
+            JsonParser parser = new JsonParser();
+            JsonObject jsonObject = parser.parse(jsonString).getAsJsonObject();
 
-        return createContent(jsonObject);
+            return createContent(jsonObject);
+        } catch (Exception e) {
+            throw new ContentUpdateException(e);
+        }
     }
 
     private static Content createContent(JsonObject jsonObject) {

@@ -14,6 +14,7 @@ import android.widget.TextView;
 import com.steppschuh.mirrordashboard.camera.CameraHelper;
 import com.steppschuh.mirrordashboard.content.Content;
 import com.steppschuh.mirrordashboard.content.ContentManager;
+import com.steppschuh.mirrordashboard.content.ContentUpdateException;
 import com.steppschuh.mirrordashboard.content.ContentUpdateListener;
 import com.steppschuh.mirrordashboard.content.ContentUpdater;
 import com.steppschuh.mirrordashboard.content.location.Location;
@@ -224,7 +225,7 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
      * was unable to fetch the latest {@link Content}
      */
     @Override
-    public void onContentUpdateFailed(ContentUpdater contentUpdater, Exception exception) {
+    public void onContentUpdateFailed(ContentUpdater contentUpdater, ContentUpdateException exception) {
         Log.e(TAG, contentUpdater + " failed to update content", exception);
         exception.printStackTrace();
     }
@@ -310,7 +311,7 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
 
         // Take picture
         try {
-            CameraHelper.getInstance().takePicture(this);
+            //CameraHelper.getInstance().takePicture(this);
         } catch (Exception e) {
             e.printStackTrace();
         }

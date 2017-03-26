@@ -8,8 +8,8 @@ public class ContentProvider {
         this.type = type;
     }
 
-    public Content fetchContent() throws Exception {
-        throw new Exception("Fetch method not implemented");
+    public Content fetchContent() throws ContentUpdateException {
+        throw new ContentUpdateException("Fetch content method not implemented");
     }
 
     @Override

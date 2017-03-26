@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.steppschuh.mirrordashboard.content.Content;
 import com.steppschuh.mirrordashboard.content.ContentProvider;
+import com.steppschuh.mirrordashboard.content.ContentUpdateException;
 import com.steppschuh.mirrordashboard.request.RequestHelper;
 
 public class SinglePlaceTracking extends ContentProvider {
@@ -25,15 +26,19 @@ public class SinglePlaceTracking extends ContentProvider {
     }
 
     @Override
-    public Content fetchContent() throws Exception {
-        String url = getRequestUrl(userId, topicId);
-        String jsonString = RequestHelper.get(url);
+    public Content fetchContent() throws ContentUpdateException {
+        try {
+            String url = getRequestUrl(userId, topicId);
+            String jsonString = RequestHelper.get(url);
 
-        JsonParser parser = new JsonParser();
-        JsonObject jsonObject = parser.parse(jsonString).getAsJsonObject();
+            JsonParser parser = new JsonParser();
+            JsonObject jsonObject = parser.parse(jsonString).getAsJsonObject();
 
-        lastLocation = createContent(jsonObject, lastLocation);
-        return lastLocation;
+            lastLocation = createContent(jsonObject, lastLocation);
+            return lastLocation;
+        } catch (Exception e) {
+            throw new ContentUpdateException(e);
+        }
     }
 
     private static Location createContent(JsonObject jsonObject, Location lastLocation) throws Exception {
@@ -51,7 +56,7 @@ public class SinglePlaceTracking extends ContentProvider {
         return location;
     }
 
-    private static String getRequestUrl(long userId, long topicId) throws Exception {
+    private static String getRequestUrl(long userId, long topicId) {
         return new StringBuilder(TRACKING_API_ENDPOINT)
                 .append("actions/get/)")
                 .append("?userId=").append(userId)

@@ -37,7 +37,7 @@ public class ContentUpdater {
                     try {
                         updateContent();
                         contentUpdateListener.onContentUpdated(content);
-                    } catch (Exception ex) {
+                    } catch (ContentUpdateException ex) {
                         contentUpdateListener.onContentUpdateFailed(ContentUpdater.this, ex);
                     } finally {
                         if (shouldUpdate) {
@@ -73,7 +73,7 @@ public class ContentUpdater {
         }
     }
 
-    private void updateContent() throws Exception {
+    private void updateContent() throws ContentUpdateException {
         content = contentProvider.fetchContent();
     }
 

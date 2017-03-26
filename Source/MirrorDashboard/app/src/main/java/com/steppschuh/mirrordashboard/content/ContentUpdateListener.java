@@ -4,6 +4,6 @@ public interface ContentUpdateListener {
 
     public void onContentUpdated(Content content);
 
-    public void onContentUpdateFailed(ContentUpdater contentUpdater, Exception exception);
+    public void onContentUpdateFailed(ContentUpdater contentUpdater, ContentUpdateException exception);
 
 }
