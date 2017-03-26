@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.steppschuh.mirrordashboard.camera.CameraException;
 import com.steppschuh.mirrordashboard.camera.CameraHelper;
+import com.steppschuh.mirrordashboard.camera.PictureTakenListener;
 import com.steppschuh.mirrordashboard.content.Content;
 import com.steppschuh.mirrordashboard.content.ContentProvider;
 import com.steppschuh.mirrordashboard.content.ContentUpdateException;
@@ -16,11 +17,11 @@ import java.util.concurrent.TimeUnit;
  * Created by Stephan on 3/26/2017.
  */
 
-public class DeviceCamera extends ContentProvider {
+public class DeviceCamera extends ContentProvider implements PictureTakenListener {
 
     public static final int POSITION_BACK_FACING = 0;
     public static final int POSITION_FRONT_FACING = 1;
-    private static final long TAKE_PICTURE_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
+    private static final long TAKE_PICTURE_TIMEOUT = TimeUnit.SECONDS.toMillis(3);
 
     protected Context context;
 
@@ -51,14 +52,20 @@ public class DeviceCamera extends ContentProvider {
 
     protected void requestPicture() {
         try {
-            CameraHelper.takePicture(context);
+            CameraHelper.takePicture(this);
         } catch (CameraException e) {
             e.printStackTrace();
         }
     }
 
-    protected void onPictureTaken() {
-        takePictureLatch.countDown();
+    @Override
+    public void onPictureTaken(byte[] data) {
+        // TODO: create content from data
+        latestPhoto = new Photo(data);
+
+        if (takePictureLatch != null) {
+            takePictureLatch.countDown();
+        }
     }
 
     public void openCamera() {
@@ -73,4 +80,6 @@ public class DeviceCamera extends ContentProvider {
     public ContentUpdater createDefaultContentUpdater() {
         return new PhotoUpdater(this);
     }
+
+
 }

@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -43,6 +44,7 @@ public final class CameraHelper {
     private static boolean useFrontFacingCamera = true;
 
     private static CameraHelper instance;
+    private List<PictureTakenListener> pictureTakenListeners = new ArrayList<>();
 
     // deprecated camera related
     private Camera deprecatedCamera;
@@ -59,6 +61,11 @@ public final class CameraHelper {
         return instance;
     }
 
+    /**
+     * Sets up the camera and prepares it to take pictures.
+     *
+     * @param context
+     */
     public static void openCamera(Context context) {
         try {
             if (useDeprecatedCamera()) {
@@ -71,18 +78,28 @@ public final class CameraHelper {
         }
     }
 
-    public static void takePicture(Context context) throws CameraException {
+    /**
+     * Attempts to take a picture using the previously setup camera.
+     *
+     * @throws CameraException
+     */
+    public static void takePicture(PictureTakenListener pictureTakenListener) throws CameraException {
         Log.d(TAG, "Taking picture ...");
-        if (!getInstance().canTakePictures) {
+        CameraHelper instance = getInstance();
+        if (!instance.canTakePictures) {
             throw new CameraException("Unable to take pictures");
         }
+        instance.registerPictureTakenListener(pictureTakenListener);
         if (useDeprecatedCamera()) {
-            getInstance().takeDeprecatedPicture();
+            instance.takeDeprecatedPicture();
         } else {
-            getInstance().takeNewPicture();
+            instance.takeNewPicture();
         }
     }
 
+    /**
+     * Releases the camera instance.
+     */
     public static void closeCamera() {
         if (useDeprecatedCamera()) {
             getInstance().closeDeprecatedCamera();
@@ -91,13 +108,31 @@ public final class CameraHelper {
         }
     }
 
+    /**
+     * Callback for {@link #takePicture(PictureTakenListener)}.
+     *
+     * @param data the compressed picture as JPG
+     */
     protected void onPictureDataReceived(byte[] data) {
-        Log.i(TAG, "Picture taken");
-        try {
-            // TODO: auto-rotate picture
-            writePictureToFile(data);
-        } catch (IOException e) {
-            e.printStackTrace();
+        Log.d(TAG, "Picture taken");
+        for (PictureTakenListener pictureTakenListener : pictureTakenListeners) {
+            try {
+                pictureTakenListener.onPictureTaken(data);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void registerPictureTakenListener(PictureTakenListener pictureTakenListener) {
+        if (!pictureTakenListeners.contains(pictureTakenListener)) {
+            pictureTakenListeners.add(pictureTakenListener);
+        }
+    }
+
+    public void unregisterPictureTakenListener(PictureTakenListener pictureTakenListener) {
+        if (pictureTakenListeners.contains(pictureTakenListener)) {
+            pictureTakenListeners.remove(pictureTakenListener);
         }
     }
 

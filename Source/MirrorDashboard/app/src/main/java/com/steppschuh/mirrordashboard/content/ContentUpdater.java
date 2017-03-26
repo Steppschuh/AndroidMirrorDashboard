@@ -11,6 +11,7 @@ public class ContentUpdater {
 
     public static final String TAG = ContentUpdater.class.getSimpleName();
     public static final long INTERVAL_DEFAULT = TimeUnit.MINUTES.toMillis(3);
+    public static final double INACTIVITY_INTERVAL_FACTOR = 2;
 
     protected long interval = INTERVAL_DEFAULT;
     protected ContentProvider contentProvider;
@@ -89,7 +90,7 @@ public class ContentUpdater {
                 return TimeUnit.MINUTES.toMillis(3);
             }
             case Content.TYPE_PHOTO: {
-                return TimeUnit.SECONDS.toMillis(10);
+                return TimeUnit.SECONDS.toMillis(5);
             }
             default: {
                 return INTERVAL_DEFAULT;

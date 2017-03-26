@@ -5,7 +5,6 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -15,6 +14,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.steppschuh.mirrordashboard.camera.CameraHelper;
 import com.steppschuh.mirrordashboard.content.Content;
 import com.steppschuh.mirrordashboard.content.ContentManager;
 import com.steppschuh.mirrordashboard.content.ContentUpdateException;
@@ -37,8 +37,8 @@ import com.steppschuh.mirrordashboard.pattern.recorder.audio.AudioPatternRecorde
 import com.steppschuh.mirrordashboard.request.SlackLog;
 import com.steppschuh.mirrordashboard.util.ScreenBrightness;
 
-import java.util.Arrays;
-import java.util.List;
+import net.steppschuh.markdowngenerator.text.heading.Heading;
+
 import java.util.concurrent.TimeUnit;
 
 public class DashboardActivity extends AppCompatActivity implements ContentUpdateListener, PatternMatchedListener {
@@ -268,7 +268,11 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
     }
 
     private void renderPhoto(Photo photo) {
-        Log.v(TAG, "Photo updated: " + photo);
+        Log.v(TAG, "Photo updated");
+        if (photo.containsFace()) {
+            Log.d(TAG, "Face detected");
+            lastActivityTimestamp = System.currentTimeMillis();
+        }
     }
 
     /**
@@ -317,10 +321,7 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
         Log.v(TAG, "Refreshing screen");
 
         adjustScreenBrightness();
-
-        // Adjust content update interval
-        float intervalFactor = ContentManager.getRecommendedUpdateIntervalFactor();
-        contentManager.adjustUpdateInterval(intervalFactor);
+        adjustContentUpdateInterval();
 
         // Location content
         locationListAdapter.notifyDataSetChanged();
@@ -328,13 +329,6 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
         // Transit content
         transitListAdapter.removeDepartedTransits();
         transitListAdapter.notifyDataSetChanged();
-
-        // Take picture
-        try {
-            //CameraHelper.getInstance().takePicture(this);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     /**
@@ -351,6 +345,14 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
                 ScreenBrightness.from(getWindow()).setScreenBrightness(screenBrightness);
             }
         });
+    }
+
+    private void adjustContentUpdateInterval() {
+        float intervalFactor = ContentManager.getRecommendedUpdateIntervalFactor();
+        if (!hasRecentlyDetectedActivity()) {
+            intervalFactor *= ContentUpdater.INACTIVITY_INTERVAL_FACTOR;
+        }
+        contentManager.adjustUpdateInterval(intervalFactor);
     }
 
     /**
