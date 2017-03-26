@@ -10,6 +10,7 @@ public class Content {
     public static final int TYPE_NEWS = 4;
     public static final int TYPE_STOCK = 5;
     public static final int TYPE_LOCATION = 6;
+    public static final int TYPE_PHOTO = 7;
 
     private int type;
     private long updateTimestamp;

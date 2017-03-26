@@ -12,6 +12,10 @@ public class ContentProvider {
         throw new ContentUpdateException("Fetch content method not implemented");
     }
 
+    public ContentUpdater createDefaultContentUpdater() {
+        return new ContentUpdater(this);
+    }
+
     @Override
     public String toString() {
         return this.getClass().getSimpleName();

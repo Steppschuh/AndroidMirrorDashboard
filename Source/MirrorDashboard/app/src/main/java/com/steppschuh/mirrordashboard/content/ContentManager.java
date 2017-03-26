@@ -61,7 +61,7 @@ public class ContentManager implements ContentUpdateListener {
     }
 
     public void addContentUpdater(ContentProvider contentProvider) {
-        ContentUpdater contentUpdater = new ContentUpdater(contentProvider);
+        ContentUpdater contentUpdater = contentProvider.createDefaultContentUpdater();
         addContentUpdater(contentUpdater);
     }
 

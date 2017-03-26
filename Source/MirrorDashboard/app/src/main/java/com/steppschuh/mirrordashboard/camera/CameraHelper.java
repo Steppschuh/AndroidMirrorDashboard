@@ -1,21 +1,41 @@
 package com.steppschuh.mirrordashboard.camera;
 
+import android.Manifest;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCaptureSession;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraDevice;
+import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CameraMetadata;
+import android.hardware.camera2.CaptureFailure;
+import android.hardware.camera2.CaptureRequest;
+import android.hardware.camera2.TotalCaptureResult;
+import android.media.Image;
+import android.media.ImageReader;
+import android.os.Build;
 import android.os.Environment;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
+import android.view.Surface;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Created by Stephan on 3/25/2017.
  */
 
-@SuppressWarnings("deprecation")
 public final class CameraHelper {
 
     private static final String TAG = CameraHelper.class.getSimpleName();
@@ -24,7 +44,12 @@ public final class CameraHelper {
 
     private static CameraHelper instance;
 
-    private Camera camera;
+    // deprecated camera related
+    private Camera deprecatedCamera;
+    private SurfaceTexture previewSurface;
+
+    // new camera related
+    private CameraDevice newCamera;
     private boolean canTakePictures = false;
 
     public static CameraHelper getInstance() {
@@ -36,23 +61,181 @@ public final class CameraHelper {
 
     public static void openCamera(Context context) {
         try {
-            getInstance().openDeprecatedCamera(context);
+            if (useDeprecatedCamera()) {
+                getInstance().openDeprecatedCamera();
+            } else {
+                getInstance().openNewCamera(context);
+            }
         } catch (CameraException e) {
-            Log.w(TAG, "Unable to open camera", e);
+            Log.w(TAG, "Unable to open deprecatedCamera", e);
         }
     }
 
-    public void openDeprecatedCamera(Context context) throws CameraException {
-        camera = null;
+    public static void takePicture(Context context) throws CameraException {
+        Log.d(TAG, "Taking picture ...");
+        if (!getInstance().canTakePictures) {
+            throw new CameraException("Unable to take pictures");
+        }
+        if (useDeprecatedCamera()) {
+            getInstance().takeDeprecatedPicture();
+        } else {
+            getInstance().takeNewPicture();
+        }
+    }
+
+    public static void closeCamera() {
+        if (useDeprecatedCamera()) {
+            getInstance().closeDeprecatedCamera();
+        } else {
+            getInstance().closeNewCamera();
+        }
+    }
+
+    protected void onPictureDataReceived(byte[] data) {
+        Log.i(TAG, "Picture taken");
         try {
-            int cameraId = 0;
-            if (useFrontFacingCamera) {
-                cameraId = getFrontFacingCameraId();
+            // TODO: auto-rotate picture
+            writePictureToFile(data);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /*
+        Methods using the new android.hardware.camera2 API
+     */
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    protected void openNewCamera(Context context) throws CameraException {
+        CameraManager manager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
+        int direction = useFrontFacingCamera ? CameraMetadata.LENS_FACING_FRONT : CameraMetadata.LENS_FACING_BACK;
+        String cameraId = getNewCameraId(direction, manager);
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            throw new CameraException("Camera permission not granted");
+        }
+        try {
+            manager.openCamera(cameraId, new CameraDevice.StateCallback() {
+                @Override
+                public void onOpened(@NonNull CameraDevice camera) {
+                    newCamera = camera;
+                    canTakePictures = true;
+                    Log.d(TAG, "Camera opened");
+                }
+
+                @Override
+                public void onDisconnected(@NonNull CameraDevice camera) {
+                    newCamera = null;
+                    canTakePictures = false;
+                    Log.d(TAG, "Camera disconnected");
+                }
+
+                @Override
+                public void onError(@NonNull CameraDevice camera, int error) {
+                    newCamera = null;
+                    canTakePictures = false;
+                    Log.d(TAG, "Camera error: " + error);
+                }
+            }, null);
+        } catch (CameraAccessException e) {
+            throw new CameraException(e);
+        }
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    protected void takeNewPicture() throws CameraException {
+        try {
+            final CaptureRequest captureRequest = newCamera.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE).build();
+
+            // TODO: query optimal size
+            int width = 1000;
+            int height = 1000;
+            final ImageReader imageReader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 1);
+            List<Surface> outputSurfaces = new LinkedList<>();
+            outputSurfaces.add(imageReader.getSurface());
+
+            newCamera.createCaptureSession(outputSurfaces, new CameraCaptureSession.StateCallback() {
+                @Override
+                public void onConfigured(@NonNull CameraCaptureSession session) {
+                    try {
+                        session.capture(captureRequest, new CameraCaptureSession.CaptureCallback() {
+                            @Override
+                            public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
+                                Image image = imageReader.acquireLatestImage();
+                                ByteBuffer buffer = image.getPlanes()[0].getBuffer();
+                                byte[] bytes = new byte[buffer.remaining()];
+                                buffer.get(bytes);
+                                onPictureDataReceived(bytes);
+                                image.close();
+                            }
+
+                            @Override
+                            public void onCaptureFailed(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull CaptureFailure failure) {
+                                Log.w(TAG, "Capture failed: " + failure);
+                            }
+                        }, null);
+                    } catch (CameraAccessException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onConfigureFailed(@NonNull CameraCaptureSession session) {
+                    Log.w(TAG, "Unable to configure capture session");
+                }
+            }, null);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    protected void closeNewCamera() {
+        try {
+            canTakePictures = false;
+            if (newCamera == null) {
+                return;
             }
-            camera = Camera.open(cameraId);
-            camera.setPreviewTexture(new SurfaceTexture(0));
-            camera.startPreview();
-            camera.setPreviewCallback(new Camera.PreviewCallback() {
+            newCamera.close();
+            newCamera = null;
+            Log.d(TAG, "Camera closed");
+        } catch (Exception e) {
+            Log.w(TAG, "Unable to close camera", e);
+        }
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private static String getNewCameraId(int direction, CameraManager cameraManager) throws CameraException {
+        try {
+            for (String cameraId : cameraManager.getCameraIdList()) {
+                CameraCharacteristics characteristics = cameraManager.getCameraCharacteristics(cameraId);
+                int facing = characteristics.get(CameraCharacteristics.LENS_FACING);
+                if (facing == direction) {
+                    return cameraId;
+                }
+            }
+            throw new CameraException("No deprecatedCamera available with direction: " + direction);
+        } catch (CameraAccessException e) {
+            throw new CameraException(e);
+        }
+    }
+
+    /*
+        Methods using the old android.hardware.camera API
+     */
+
+    @SuppressWarnings("deprecation")
+    protected void openDeprecatedCamera() throws CameraException {
+        deprecatedCamera = null;
+        canTakePictures = false;
+        try {
+            int direction = useFrontFacingCamera ? Camera.CameraInfo.CAMERA_FACING_FRONT : Camera.CameraInfo.CAMERA_FACING_BACK;
+            int cameraId = getDeprecatedCameraId(direction);
+            previewSurface = new SurfaceTexture(0);
+
+            deprecatedCamera = Camera.open(cameraId);
+            deprecatedCamera.setPreviewTexture(previewSurface);
+            deprecatedCamera.startPreview();
+            deprecatedCamera.setPreviewCallback(new Camera.PreviewCallback() {
                 @Override
                 public void onPreviewFrame(byte[] data, Camera camera) {
                     canTakePictures = true;
@@ -65,49 +248,57 @@ public final class CameraHelper {
         }
     }
 
-    public void takePicture(Context context) throws CameraException {
-        Log.d(TAG, "Taking picture ...");
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-            //CameraManager manager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
-        } else {
-            if (!canTakePictures) {
-                throw new CameraException("Unable to take pictures");
-            }
-            camera.takePicture(null, null, createPictureCallback());
-        }
-    }
-
-    public static void closeCamera() {
-        getInstance().closeDeprecatedCamera();
-    }
-
-    public void closeDeprecatedCamera() {
-        canTakePictures = false;
-        if (camera == null) {
-            return;
-        }
-        camera.stopPreview();
-        camera.release();
-        camera = null;
-        Log.d(TAG, "Camera closed");
-    }
-
-    private Camera.PictureCallback createPictureCallback() {
-        return new Camera.PictureCallback() {
+    @SuppressWarnings("deprecation")
+    protected void takeDeprecatedPicture() throws CameraException {
+        deprecatedCamera.takePicture(null, null, new Camera.PictureCallback() {
             @Override
             public void onPictureTaken(byte[] data, Camera camera) {
-                Log.i(TAG, "Picture taken");
-                try {
-                    writePictureToFile(data);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                canTakePictures = true;
+                camera.startPreview();
+                onPictureDataReceived(data);
             }
-        };
+        });
+        canTakePictures = false;
     }
 
+    @SuppressWarnings("deprecation")
+    protected void closeDeprecatedCamera() {
+        try {
+            canTakePictures = false;
+            if (deprecatedCamera == null) {
+                return;
+            }
+            deprecatedCamera.stopPreview();
+            deprecatedCamera.release();
+            deprecatedCamera = null;
+            previewSurface = null;
+            Log.d(TAG, "Camera closed");
+        } catch (Exception e) {
+            Log.w(TAG, "Unable to close camera", e);
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    private static int getDeprecatedCameraId(int direction) throws CameraException {
+        int numberOfCameras = Camera.getNumberOfCameras();
+        for (int cameraId = 0; cameraId < numberOfCameras; cameraId++) {
+            Camera.CameraInfo info = new Camera.CameraInfo();
+            Camera.getCameraInfo(cameraId, info);
+            if (info.facing == direction) {
+                return cameraId;
+            }
+        }
+        throw new CameraException("No deprecatedCamera available with direction: " + direction);
+    }
+
+    /**
+     * Writes the passed bytes to a jpg file in the public external storage directory.
+     *
+     * @param data
+     * @throws IOException
+     */
     public static void writePictureToFile(byte[] data) throws IOException {
-        File externalStorage = Environment.getExternalStorageDirectory();
+        File externalStorage = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
         File appDirectory = new File(externalStorage, "/Mirror");
         appDirectory.mkdirs();
 
@@ -119,22 +310,25 @@ public final class CameraHelper {
         Log.v(TAG, "Wrote picture to file: " + imageFile.getAbsolutePath());
     }
 
+    /**
+     * Checks if the current device has a camera.
+     *
+     * @param context
+     * @return
+     */
     public static boolean deviceHasCamera(Context context) {
         return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA);
     }
 
-    private static int getFrontFacingCameraId() {
-        int cameraId = -1;
-        int numberOfCameras = Camera.getNumberOfCameras();
-        for (int i = 0; i < numberOfCameras; i++) {
-            Camera.CameraInfo info = new Camera.CameraInfo();
-            Camera.getCameraInfo(i, info);
-            if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-                cameraId = i;
-                break;
-            }
-        }
-        return cameraId;
+    /**
+     * Checks if the the current device should use the new camera API or the deprecated one.
+     * Because the deprecated API works more solid (even on current devices),
+     * it will be used even though the newer API is available.
+     *
+     * @return
+     */
+    private static boolean useDeprecatedCamera() {
+        return true || Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP;
     }
 
 }

@@ -1,9 +1,13 @@
 package com.steppschuh.mirrordashboard;
 
+import android.Manifest;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -11,12 +15,13 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.steppschuh.mirrordashboard.camera.CameraHelper;
 import com.steppschuh.mirrordashboard.content.Content;
 import com.steppschuh.mirrordashboard.content.ContentManager;
 import com.steppschuh.mirrordashboard.content.ContentUpdateException;
 import com.steppschuh.mirrordashboard.content.ContentUpdateListener;
 import com.steppschuh.mirrordashboard.content.ContentUpdater;
+import com.steppschuh.mirrordashboard.content.camera.DeviceCamera;
+import com.steppschuh.mirrordashboard.content.camera.Photo;
 import com.steppschuh.mirrordashboard.content.location.Location;
 import com.steppschuh.mirrordashboard.content.location.LocationListAdapter;
 import com.steppschuh.mirrordashboard.content.location.PlaceTracking;
@@ -32,6 +37,8 @@ import com.steppschuh.mirrordashboard.pattern.recorder.audio.AudioPatternRecorde
 import com.steppschuh.mirrordashboard.request.SlackLog;
 import com.steppschuh.mirrordashboard.util.ScreenBrightness;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class DashboardActivity extends AppCompatActivity implements ContentUpdateListener, PatternMatchedListener {
@@ -39,6 +46,8 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
     private static final String TAG = DashboardActivity.class.getSimpleName();
     private static final long SCREEN_REFRESH_INTERVAL = TimeUnit.SECONDS.toMillis(30);
     private static final long DETECTED_ACTIVITY_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
+
+    private static final int PERMISSION_REQUEST = 1;
 
     private boolean shouldRefreshScreen = false;
     private Handler screenRefreshHandler = new Handler();
@@ -78,13 +87,12 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
         super.onResume();
         hideSystemUI();
         startRefreshingScreen();
-        CameraHelper.openCamera(this);
+        requestPermissions();
     }
 
     @Override
     protected void onPause() {
         stopRefreshingScreen();
-        CameraHelper.closeCamera();
         super.onPause();
     }
 
@@ -181,6 +189,11 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
         placeTracking.addTopic(PlaceTracking.TOPIC_ID_POTSDAM_CENTRAL_STATION, getString(R.string.location_potsdam_central_station));
         contentManager.addContentUpdater(placeTracking);
 
+        // Photo content
+        int cameraPosition = DeviceCamera.POSITION_FRONT_FACING;
+        DeviceCamera deviceCamera = new DeviceCamera(this, cameraPosition);
+        contentManager.addContentUpdater(deviceCamera);
+
         // start updating content
         contentManager.startAllContentUpdaters();
     }
@@ -208,6 +221,10 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
                             renderLocation((Location) content);
                             break;
                         }
+                        case Content.TYPE_PHOTO: {
+                            renderPhoto((Photo) content);
+                            break;
+                        }
                         default: {
                             throw new Exception("Content type unknown: " + content.getType());
                         }
@@ -227,7 +244,6 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
     @Override
     public void onContentUpdateFailed(ContentUpdater contentUpdater, ContentUpdateException exception) {
         Log.e(TAG, contentUpdater + " failed to update content", exception);
-        exception.printStackTrace();
     }
 
     private void renderWeather(Weather weather) {
@@ -249,6 +265,10 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
         Log.v(TAG, "Location updated: " + location.getReadableString(this));
         locationListAdapter.updateLocation(location);
         locationListAdapter.notifyDataSetChanged();
+    }
+
+    private void renderPhoto(Photo photo) {
+        Log.v(TAG, "Photo updated: " + photo);
     }
 
     /**
@@ -372,6 +392,25 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
             SlackLog.i(TAG, "App version " + packageInfo.versionName + " started :relaxed:");
         } catch (PackageManager.NameNotFoundException e) {
             SlackLog.e(TAG, e);
+        }
+    }
+
+    private void requestPermissions() {
+        String[] requiredPermissions = new String[]{
+                Manifest.permission.CAMERA,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+        };
+
+        boolean anyPermissionMissing = false;
+        for (String requiredPermission : requiredPermissions) {
+            if (ContextCompat.checkSelfPermission(this, requiredPermission) != PackageManager.PERMISSION_GRANTED) {
+                anyPermissionMissing = true;
+                break;
+            }
+        }
+
+        if (anyPermissionMissing) {
+            ActivityCompat.requestPermissions(this, requiredPermissions, PERMISSION_REQUEST);
         }
     }
 

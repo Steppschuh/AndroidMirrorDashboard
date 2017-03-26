@@ -12,12 +12,12 @@ public class ContentUpdater {
     public static final String TAG = ContentUpdater.class.getSimpleName();
     public static final long INTERVAL_DEFAULT = TimeUnit.MINUTES.toMillis(3);
 
-    private long interval = INTERVAL_DEFAULT;
-    private ContentProvider contentProvider;
-    private Content content;
-    private Handler handler;
-    private HandlerThread handlerThread;
-    private boolean shouldUpdate;
+    protected long interval = INTERVAL_DEFAULT;
+    protected ContentProvider contentProvider;
+    protected Content content;
+    protected Handler handler;
+    protected HandlerThread handlerThread;
+    protected boolean shouldUpdate;
 
     public ContentUpdater(ContentProvider contentProvider) {
         this.contentProvider = contentProvider;
@@ -87,6 +87,9 @@ public class ContentUpdater {
             }
             case Content.TYPE_LOCATION: {
                 return TimeUnit.MINUTES.toMillis(3);
+            }
+            case Content.TYPE_PHOTO: {
+                return TimeUnit.SECONDS.toMillis(10);
             }
             default: {
                 return INTERVAL_DEFAULT;
