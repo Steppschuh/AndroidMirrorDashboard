@@ -1,36 +1,20 @@
 package com.steppschuh.mirrordashboard.camera;
 
-import android.Manifest;
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.graphics.ImageFormat;
+import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
+import android.graphics.YuvImage;
 import android.hardware.Camera;
-import android.hardware.camera2.CameraAccessException;
-import android.hardware.camera2.CameraCaptureSession;
-import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraDevice;
-import android.hardware.camera2.CameraManager;
-import android.hardware.camera2.CameraMetadata;
-import android.hardware.camera2.CaptureFailure;
-import android.hardware.camera2.CaptureRequest;
-import android.hardware.camera2.TotalCaptureResult;
-import android.media.Image;
-import android.media.ImageReader;
 import android.os.Build;
 import android.os.Environment;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
 import android.util.Log;
-import android.view.Surface;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -44,15 +28,16 @@ public final class CameraHelper {
     private static boolean useFrontFacingCamera = true;
 
     private static CameraHelper instance;
-    private List<PictureTakenListener> pictureTakenListeners = new ArrayList<>();
+    private List<CameraPictureTakenListener> cameraPictureTakenListeners = new ArrayList<>();
+    private List<CameraPreviewUpdatedListener> cameraPreviewUpdatedListeners = new ArrayList<>();
 
-    // deprecated camera related
     private Camera deprecatedCamera;
     private SurfaceTexture previewSurface;
 
-    // new camera related
-    private CameraDevice newCamera;
     private boolean canTakePictures = false;
+
+    private long lastProcessedPreviewTimestamp = 0;
+    private long minimumPreviewUpdateDelay = 1000;
 
     public static CameraHelper getInstance() {
         if (instance == null) {
@@ -68,11 +53,7 @@ public final class CameraHelper {
      */
     public static void openCamera(Context context) {
         try {
-            if (useDeprecatedCamera()) {
-                getInstance().openDeprecatedCamera();
-            } else {
-                getInstance().openNewCamera(context);
-            }
+            getInstance().openDeprecatedCamera();
         } catch (CameraException e) {
             Log.w(TAG, "Unable to open deprecatedCamera", e);
         }
@@ -83,179 +64,51 @@ public final class CameraHelper {
      *
      * @throws CameraException
      */
-    public static void takePicture(PictureTakenListener pictureTakenListener) throws CameraException {
+    public static void takePicture(CameraPictureTakenListener cameraPictureTakenListener) throws CameraException {
         Log.d(TAG, "Taking picture ...");
         CameraHelper instance = getInstance();
         if (!instance.canTakePictures) {
             throw new CameraException("Unable to take pictures");
         }
-        instance.registerPictureTakenListener(pictureTakenListener);
-        if (useDeprecatedCamera()) {
-            instance.takeDeprecatedPicture();
-        } else {
-            instance.takeNewPicture();
-        }
+        instance.registerPictureTakenListener(cameraPictureTakenListener);
+        instance.takeDeprecatedPicture();
     }
 
     /**
      * Releases the camera instance.
      */
     public static void closeCamera() {
-        if (useDeprecatedCamera()) {
-            getInstance().closeDeprecatedCamera();
-        } else {
-            getInstance().closeNewCamera();
-        }
+        getInstance().closeDeprecatedCamera();
     }
 
     /**
-     * Callback for {@link #takePicture(PictureTakenListener)}.
+     * Callback for {@link #takePicture(CameraPictureTakenListener)}.
      *
      * @param data the compressed picture as JPG
      */
     protected void onPictureDataReceived(byte[] data) {
         Log.d(TAG, "Picture taken");
-        for (PictureTakenListener pictureTakenListener : pictureTakenListeners) {
+        for (CameraPictureTakenListener cameraPictureTakenListener : cameraPictureTakenListeners) {
             try {
-                pictureTakenListener.onPictureTaken(data);
+                cameraPictureTakenListener.onCameraPictureTaken(data);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
     }
 
-    public void registerPictureTakenListener(PictureTakenListener pictureTakenListener) {
-        if (!pictureTakenListeners.contains(pictureTakenListener)) {
-            pictureTakenListeners.add(pictureTakenListener);
-        }
-    }
-
-    public void unregisterPictureTakenListener(PictureTakenListener pictureTakenListener) {
-        if (pictureTakenListeners.contains(pictureTakenListener)) {
-            pictureTakenListeners.remove(pictureTakenListener);
+    protected void onPreviewDataReceived(byte[] data) {
+        for (CameraPreviewUpdatedListener cameraPreviewUpdatedListener : cameraPreviewUpdatedListeners) {
+            try {
+                cameraPreviewUpdatedListener.onCameraPreviewUpdated(data);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
     /*
-        Methods using the new android.hardware.camera2 API
-     */
-
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    protected void openNewCamera(Context context) throws CameraException {
-        CameraManager manager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
-        int direction = useFrontFacingCamera ? CameraMetadata.LENS_FACING_FRONT : CameraMetadata.LENS_FACING_BACK;
-        String cameraId = getNewCameraId(direction, manager);
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            throw new CameraException("Camera permission not granted");
-        }
-        try {
-            manager.openCamera(cameraId, new CameraDevice.StateCallback() {
-                @Override
-                public void onOpened(@NonNull CameraDevice camera) {
-                    newCamera = camera;
-                    canTakePictures = true;
-                    Log.d(TAG, "Camera opened");
-                }
-
-                @Override
-                public void onDisconnected(@NonNull CameraDevice camera) {
-                    newCamera = null;
-                    canTakePictures = false;
-                    Log.d(TAG, "Camera disconnected");
-                }
-
-                @Override
-                public void onError(@NonNull CameraDevice camera, int error) {
-                    newCamera = null;
-                    canTakePictures = false;
-                    Log.d(TAG, "Camera error: " + error);
-                }
-            }, null);
-        } catch (CameraAccessException e) {
-            throw new CameraException(e);
-        }
-    }
-
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    protected void takeNewPicture() throws CameraException {
-        try {
-            final CaptureRequest captureRequest = newCamera.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE).build();
-
-            // TODO: query optimal size
-            int width = 1000;
-            int height = 1000;
-            final ImageReader imageReader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 1);
-            List<Surface> outputSurfaces = new LinkedList<>();
-            outputSurfaces.add(imageReader.getSurface());
-
-            newCamera.createCaptureSession(outputSurfaces, new CameraCaptureSession.StateCallback() {
-                @Override
-                public void onConfigured(@NonNull CameraCaptureSession session) {
-                    try {
-                        session.capture(captureRequest, new CameraCaptureSession.CaptureCallback() {
-                            @Override
-                            public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
-                                Image image = imageReader.acquireLatestImage();
-                                ByteBuffer buffer = image.getPlanes()[0].getBuffer();
-                                byte[] bytes = new byte[buffer.remaining()];
-                                buffer.get(bytes);
-                                onPictureDataReceived(bytes);
-                                image.close();
-                            }
-
-                            @Override
-                            public void onCaptureFailed(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull CaptureFailure failure) {
-                                Log.w(TAG, "Capture failed: " + failure);
-                            }
-                        }, null);
-                    } catch (CameraAccessException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                @Override
-                public void onConfigureFailed(@NonNull CameraCaptureSession session) {
-                    Log.w(TAG, "Unable to configure capture session");
-                }
-            }, null);
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    protected void closeNewCamera() {
-        try {
-            canTakePictures = false;
-            if (newCamera == null) {
-                return;
-            }
-            newCamera.close();
-            newCamera = null;
-            Log.d(TAG, "Camera closed");
-        } catch (Exception e) {
-            Log.w(TAG, "Unable to close camera", e);
-        }
-    }
-
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private static String getNewCameraId(int direction, CameraManager cameraManager) throws CameraException {
-        try {
-            for (String cameraId : cameraManager.getCameraIdList()) {
-                CameraCharacteristics characteristics = cameraManager.getCameraCharacteristics(cameraId);
-                int facing = characteristics.get(CameraCharacteristics.LENS_FACING);
-                if (facing == direction) {
-                    return cameraId;
-                }
-            }
-            throw new CameraException("No deprecatedCamera available with direction: " + direction);
-        } catch (CameraAccessException e) {
-            throw new CameraException(e);
-        }
-    }
-
-    /*
-        Methods using the old android.hardware.camera API
+        Methods using the old android.hardware.face_dtection API
      */
 
     @SuppressWarnings("deprecation")
@@ -272,8 +125,25 @@ public final class CameraHelper {
             deprecatedCamera.startPreview();
             deprecatedCamera.setPreviewCallback(new Camera.PreviewCallback() {
                 @Override
-                public void onPreviewFrame(byte[] data, Camera camera) {
+                public void onPreviewFrame(byte[] yuvData, Camera camera) {
                     canTakePictures = true;
+                    if (cameraPreviewUpdatedListeners.isEmpty()) {
+                        return;
+                    }
+                    if (lastProcessedPreviewTimestamp > System.currentTimeMillis() - minimumPreviewUpdateDelay) {
+                        return;
+                    }
+                    lastProcessedPreviewTimestamp = System.currentTimeMillis();
+
+                    Camera.Parameters parameters = camera.getParameters();
+                    Camera.Size size = parameters.getPreviewSize();
+                    YuvImage yuvImage = new YuvImage(yuvData, parameters.getPreviewFormat(), size.width, size.height, null);
+
+                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+                    yuvImage.compressToJpeg(new Rect(0, 0, size.width, size.height), 50, out);
+                    byte[] bitmapData = out.toByteArray();
+
+                    onPreviewDataReceived(bitmapData);
                 }
             });
             Log.d(TAG, "Camera opened");
@@ -300,9 +170,6 @@ public final class CameraHelper {
     protected void closeDeprecatedCamera() {
         try {
             canTakePictures = false;
-            if (deprecatedCamera == null) {
-                return;
-            }
             deprecatedCamera.stopPreview();
             deprecatedCamera.release();
             deprecatedCamera = null;
@@ -346,7 +213,7 @@ public final class CameraHelper {
     }
 
     /**
-     * Checks if the current device has a camera.
+     * Checks if the current device has a face_dtection.
      *
      * @param context
      * @return
@@ -356,7 +223,7 @@ public final class CameraHelper {
     }
 
     /**
-     * Checks if the the current device should use the new camera API or the deprecated one.
+     * Checks if the the current device should use the new face_dtection API or the deprecated one.
      * Because the deprecated API works more solid (even on current devices),
      * it will be used even though the newer API is available.
      *
@@ -364,6 +231,30 @@ public final class CameraHelper {
      */
     private static boolean useDeprecatedCamera() {
         return true || Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP;
+    }
+
+    public void registerPictureTakenListener(CameraPictureTakenListener cameraPictureTakenListener) {
+        if (!cameraPictureTakenListeners.contains(cameraPictureTakenListener)) {
+            cameraPictureTakenListeners.add(cameraPictureTakenListener);
+        }
+    }
+
+    public void unregisterPictureTakenListener(CameraPictureTakenListener cameraPictureTakenListener) {
+        if (cameraPictureTakenListeners.contains(cameraPictureTakenListener)) {
+            cameraPictureTakenListeners.remove(cameraPictureTakenListener);
+        }
+    }
+
+    public void registerPreviewUpdatedListener(CameraPreviewUpdatedListener CameraPreviewUpdatedListener) {
+        if (!cameraPreviewUpdatedListeners.contains(CameraPreviewUpdatedListener)) {
+            cameraPreviewUpdatedListeners.add(CameraPreviewUpdatedListener);
+        }
+    }
+
+    public void unregisterPreviewUpdatedListener(CameraPreviewUpdatedListener CameraPreviewUpdatedListener) {
+        if (cameraPreviewUpdatedListeners.contains(CameraPreviewUpdatedListener)) {
+            cameraPreviewUpdatedListeners.remove(CameraPreviewUpdatedListener);
+        }
     }
 
 }

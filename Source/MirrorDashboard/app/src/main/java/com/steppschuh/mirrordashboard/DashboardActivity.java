@@ -3,6 +3,7 @@ package com.steppschuh.mirrordashboard;
 import android.Manifest;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
@@ -15,6 +16,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.steppschuh.mirrordashboard.camera.CameraHelper;
+import com.steppschuh.mirrordashboard.camera.CameraPreviewUpdatedListener;
 import com.steppschuh.mirrordashboard.content.Content;
 import com.steppschuh.mirrordashboard.content.ContentManager;
 import com.steppschuh.mirrordashboard.content.ContentUpdateException;
@@ -35,9 +37,8 @@ import com.steppschuh.mirrordashboard.pattern.PatternManager;
 import com.steppschuh.mirrordashboard.pattern.PatternMatchedListener;
 import com.steppschuh.mirrordashboard.pattern.recorder.audio.AudioPatternRecorder;
 import com.steppschuh.mirrordashboard.request.SlackLog;
-import com.steppschuh.mirrordashboard.util.ScreenBrightness;
-
-import net.steppschuh.markdowngenerator.text.heading.Heading;
+import com.steppschuh.mirrordashboard.util.BitmapUtil;
+import com.steppschuh.mirrordashboard.util.ScreenUtil;
 
 import java.util.concurrent.TimeUnit;
 
@@ -60,6 +61,8 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
     private TextView weatherTemperature;
     private TextView weatherDescription;
     private ImageView weatherIcon;
+
+    private ImageView cameraPreview;
 
     private ListView transitList;
     private TransitListAdapter transitListAdapter;
@@ -111,6 +114,9 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
         weatherTemperature = (TextView) findViewById(R.id.weatherTemperature);
         weatherDescription = (TextView) findViewById(R.id.weatherDescription);
         weatherIcon = (ImageView) findViewById(R.id.weatherIcon);
+
+        // Photo content
+        cameraPreview = (ImageView) findViewById(R.id.cameraPreview);
 
         // Transit content
         transitList = (ListView) findViewById(R.id.transitList);
@@ -194,6 +200,22 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
         DeviceCamera deviceCamera = new DeviceCamera(this, cameraPosition);
         contentManager.addContentUpdater(deviceCamera);
 
+        CameraHelper.getInstance().registerPreviewUpdatedListener(new CameraPreviewUpdatedListener() {
+            @Override
+            public void onCameraPreviewUpdated(final byte[] data) {
+                Bitmap previewBitmap = BitmapUtil.scale(BitmapUtil.createBitmap(data), 300);
+                int rotation = ScreenUtil.getRotation(DashboardActivity.this);
+                if (rotation != 0) {
+                    previewBitmap = BitmapUtil.rotate(previewBitmap, rotation);
+                }
+                if (BitmapUtil.containsFace(previewBitmap)) {
+                    Log.d(TAG, "Face detected in camera preview");
+                    onActivityDetected();
+                }
+                //updateCameraPreviewImage(previewBitmap);
+            }
+        });
+
         // start updating content
         contentManager.startAllContentUpdaters();
     }
@@ -267,12 +289,27 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
         locationListAdapter.notifyDataSetChanged();
     }
 
-    private void renderPhoto(Photo photo) {
+    private void renderPhoto(final Photo photo) {
         Log.v(TAG, "Photo updated");
         if (photo.containsFace()) {
-            Log.d(TAG, "Face detected");
-            lastActivityTimestamp = System.currentTimeMillis();
+            Log.d(TAG, "Face detected in camera photo");
+            onActivityDetected();
+            updateCameraPreviewImage(photo.getBitmap());
         }
+    }
+
+    private void updateCameraPreviewImage(final Bitmap bitmap) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                cameraPreview.setImageBitmap(bitmap);
+            }
+        });
+    }
+
+    private void onActivityDetected() {
+        lastActivityTimestamp = System.currentTimeMillis();
+        refreshScreen();
     }
 
     /**
@@ -338,11 +375,11 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                float screenBrightness = ScreenBrightness.getRecommendedScreenBrightness();
+                float screenBrightness = ScreenUtil.getRecommendedScreenBrightness();
                 if (!hasRecentlyDetectedActivity()) {
-                    screenBrightness *= ScreenBrightness.INACTIVITY_BRIGHTNESS_FACTOR;
+                    screenBrightness *= ScreenUtil.INACTIVITY_BRIGHTNESS_FACTOR;
                 }
-                ScreenBrightness.from(getWindow()).setScreenBrightness(screenBrightness);
+                ScreenUtil.from(getWindow()).setScreenBrightness(screenBrightness);
             }
         });
     }

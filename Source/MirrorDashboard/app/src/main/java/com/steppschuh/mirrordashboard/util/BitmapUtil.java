@@ -5,9 +5,11 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.media.FaceDetector;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,11 +22,17 @@ public final class BitmapUtil {
         return BitmapFactory.decodeByteArray(data, 0, data.length, options);
     }
 
-    public static Bitmap scale(Bitmap bitmap, int longestEdge) {
+    public static byte[] createByteArray(Bitmap bitmap) {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream);
+        return stream.toByteArray();
+    }
+
+    public static Bitmap scale(Bitmap original, int longestEdge) {
         int outWidth;
         int outHeight;
-        int inWidth = bitmap.getWidth();
-        int inHeight = bitmap.getHeight();
+        int inWidth = original.getWidth();
+        int inHeight = original.getHeight();
         if (inWidth > inHeight) {
             outWidth = longestEdge;
             outHeight = (inHeight * longestEdge) / inWidth;
@@ -32,7 +40,15 @@ public final class BitmapUtil {
             outHeight = longestEdge;
             outWidth = (inWidth * longestEdge) / inHeight;
         }
-        return Bitmap.createScaledBitmap(bitmap, outWidth, outHeight, false);
+        outWidth += outWidth % 2;
+        outHeight += outHeight % 2;
+        return Bitmap.createScaledBitmap(original, outWidth, outHeight, false);
+    }
+
+    public static Bitmap rotate(Bitmap original, float angle) {
+        Matrix matrix = new Matrix();
+        matrix.postRotate(angle);
+        return Bitmap.createBitmap(original, 0, 0, original.getWidth(), original.getHeight(), matrix, true);
     }
 
     public static Bitmap greyscale(Bitmap original) {

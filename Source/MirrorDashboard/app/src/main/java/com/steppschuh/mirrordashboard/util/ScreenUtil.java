@@ -1,5 +1,9 @@
 package com.steppschuh.mirrordashboard.util;
 
+import android.content.Context;
+import android.os.Build;
+import android.view.Display;
+import android.view.Surface;
 import android.view.Window;
 import android.view.WindowManager;
 
@@ -7,22 +11,24 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
-public final class ScreenBrightness {
+import static android.content.Context.WINDOW_SERVICE;
+
+public final class ScreenUtil {
 
     public static final double INACTIVITY_BRIGHTNESS_FACTOR = 0.25;
 
-    private static ScreenBrightness instance;
+    private static ScreenUtil instance;
     private Window window;
 
-    private static ScreenBrightness getInstance() {
+    private static ScreenUtil getInstance() {
         if (instance == null) {
-            instance = new ScreenBrightness();
+            instance = new ScreenUtil();
         }
         return instance;
     }
 
-    public static ScreenBrightness from(Window window) {
-        ScreenBrightness screenBrightness = getInstance();
+    public static ScreenUtil from(Window window) {
+        ScreenUtil screenBrightness = getInstance();
         screenBrightness.window = window;
         return screenBrightness;
     }
@@ -59,6 +65,37 @@ public final class ScreenBrightness {
         } else {
             return 1f;
         }
+    }
+
+    /**
+     * Returns the device screen angle in degrees.
+     *
+     * @param context
+     * @return
+     */
+    public static int getRotation(Context context) {
+        Display display = ((WindowManager) context.getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
+        int degrees = 0;
+        switch (display.getRotation()) {
+            case Surface.ROTATION_90: {
+                degrees = 90;
+                break;
+            }
+            case Surface.ROTATION_180: {
+                degrees = 180;
+                break;
+            }
+            case Surface.ROTATION_270: {
+                degrees = 270;
+                break;
+            }
+        }
+
+        // adjust degrees, because manufacturers failed..
+        if (Build.MODEL.equals("KFJWI")) {
+            degrees = (degrees + 90) % 360;
+        }
+        return degrees;
     }
 
 }

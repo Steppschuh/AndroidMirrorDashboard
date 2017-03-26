@@ -42,7 +42,7 @@ import com.steppschuh.mirrordashboard.camera.GraphicOverlay;
 import java.io.IOException;
 
 /**
- * Activity for the face tracker app.  This app detects faces with the rear facing camera, and draws
+ * Activity for the face tracker app.  This app detects faces with the rear facing face_dtection, and draws
  * overlay graphics to indicate the position, size, and ID of each face.
  */
 public final class FaceTrackerActivity extends AppCompatActivity {
@@ -67,12 +67,12 @@ public final class FaceTrackerActivity extends AppCompatActivity {
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
-        setContentView(R.layout.camera);
+        setContentView(R.layout.face_dtection);
 
         mPreview = (CameraSourcePreview) findViewById(R.id.preview);
         mGraphicOverlay = (GraphicOverlay) findViewById(R.id.faceOverlay);
 
-        // Check for the camera permission before accessing the camera.  If the
+        // Check for the face_dtection permission before accessing the face_dtection.  If the
         // permission is not granted yet, request permission.
         int rc = ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
         if (rc == PackageManager.PERMISSION_GRANTED) {
@@ -83,7 +83,7 @@ public final class FaceTrackerActivity extends AppCompatActivity {
     }
 
     /**
-     * Handles the requesting of the camera permission.  This includes
+     * Handles the requesting of the face_dtection permission.  This includes
      * showing a "Snackbar" message of why the permission is needed then
      * sending the request.
      */
@@ -115,7 +115,7 @@ public final class FaceTrackerActivity extends AppCompatActivity {
     }
 
     /**
-     * Creates and starts the camera.  Note that this uses a higher resolution in comparison
+     * Creates and starts the face_dtection.  Note that this uses a higher resolution in comparison
      * to other detection examples to enable the barcode detector to detect small barcodes
      * at long distances.
      */
@@ -150,7 +150,7 @@ public final class FaceTrackerActivity extends AppCompatActivity {
     }
 
     /**
-     * Restarts the camera.
+     * Restarts the face_dtection.
      */
     @Override
     protected void onResume() {
@@ -160,7 +160,7 @@ public final class FaceTrackerActivity extends AppCompatActivity {
     }
 
     /**
-     * Stops the camera.
+     * Stops the face_dtection.
      */
     @Override
     protected void onPause() {
@@ -169,7 +169,7 @@ public final class FaceTrackerActivity extends AppCompatActivity {
     }
 
     /**
-     * Releases the resources associated with the camera source, the associated detector, and the
+     * Releases the resources associated with the face_dtection source, the associated detector, and the
      * rest of the processing pipeline.
      */
     @Override
@@ -205,7 +205,7 @@ public final class FaceTrackerActivity extends AppCompatActivity {
         }
 
         if (grantResults.length != 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "Camera permission granted - initialize the camera source");
+            Log.d(TAG, "Camera permission granted - initialize the face_dtection source");
             // we have permission, so create the camerasource
             createCameraSource();
             return;
@@ -232,9 +232,9 @@ public final class FaceTrackerActivity extends AppCompatActivity {
     //==============================================================================================
 
     /**
-     * Starts or restarts the camera source, if it exists.  If the camera source doesn't exist yet
-     * (e.g., because onResume was called before the camera source was created), this will be called
-     * again when the camera source is created.
+     * Starts or restarts the face_dtection source, if it exists.  If the face_dtection source doesn't exist yet
+     * (e.g., because onResume was called before the face_dtection source was created), this will be called
+     * again when the face_dtection source is created.
      */
     private void startCameraSource() {
 
@@ -251,7 +251,7 @@ public final class FaceTrackerActivity extends AppCompatActivity {
             try {
                 mPreview.start(mCameraSource, mGraphicOverlay);
             } catch (IOException e) {
-                Log.e(TAG, "Unable to start camera source.", e);
+                Log.e(TAG, "Unable to start face_dtection source.", e);
                 mCameraSource.release();
                 mCameraSource = null;
             }

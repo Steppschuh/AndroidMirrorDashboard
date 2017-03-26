@@ -17,6 +17,16 @@
     </include>
 
     <include
+        android:id="@+id/camera"
+        layout="@layout/camera"
+        android:layout_toRightOf="@id/weather"
+        android:layout_alignTop ="@id/weather"
+        android:layout_alignBottom="@id/weather"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+    </include>
+
+    <include
         android:id="@+id/locations"
         layout="@layout/location"
         android:layout_marginTop="50dp"

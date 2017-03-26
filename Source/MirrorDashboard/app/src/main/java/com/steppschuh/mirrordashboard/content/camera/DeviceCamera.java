@@ -1,14 +1,18 @@
 package com.steppschuh.mirrordashboard.content.camera;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 
 import com.steppschuh.mirrordashboard.camera.CameraException;
 import com.steppschuh.mirrordashboard.camera.CameraHelper;
-import com.steppschuh.mirrordashboard.camera.PictureTakenListener;
+import com.steppschuh.mirrordashboard.camera.CameraPictureTakenListener;
+import com.steppschuh.mirrordashboard.camera.CameraPreviewUpdatedListener;
 import com.steppschuh.mirrordashboard.content.Content;
 import com.steppschuh.mirrordashboard.content.ContentProvider;
 import com.steppschuh.mirrordashboard.content.ContentUpdateException;
 import com.steppschuh.mirrordashboard.content.ContentUpdater;
+import com.steppschuh.mirrordashboard.util.BitmapUtil;
+import com.steppschuh.mirrordashboard.util.ScreenUtil;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -17,7 +21,7 @@ import java.util.concurrent.TimeUnit;
  * Created by Stephan on 3/26/2017.
  */
 
-public class DeviceCamera extends ContentProvider implements PictureTakenListener {
+public class DeviceCamera extends ContentProvider implements CameraPictureTakenListener, CameraPreviewUpdatedListener {
 
     public static final int POSITION_BACK_FACING = 0;
     public static final int POSITION_FRONT_FACING = 1;
@@ -59,13 +63,27 @@ public class DeviceCamera extends ContentProvider implements PictureTakenListene
     }
 
     @Override
-    public void onPictureTaken(byte[] data) {
-        // TODO: create content from data
-        latestPhoto = new Photo(data);
+    public void onCameraPictureTaken(byte[] data) {
+        float rotationAngle = ScreenUtil.getRotation(context);
+        if (rotationAngle != 0) {
+            Bitmap bitmap = BitmapUtil.createBitmap(data);
+            Bitmap rotatedBitmap = BitmapUtil.rotate(bitmap, rotationAngle);
+            byte[] rotatedData = BitmapUtil.createByteArray(rotatedBitmap);
+
+            latestPhoto = new Photo(rotatedData);
+            latestPhoto.setBitmap(rotatedBitmap);
+        } else {
+            latestPhoto = new Photo(data);
+        }
 
         if (takePictureLatch != null) {
             takePictureLatch.countDown();
         }
+    }
+
+    @Override
+    public void onCameraPreviewUpdated(byte[] data) {
+
     }
 
     public void openCamera() {
@@ -80,6 +98,5 @@ public class DeviceCamera extends ContentProvider implements PictureTakenListene
     public ContentUpdater createDefaultContentUpdater() {
         return new PhotoUpdater(this);
     }
-
 
 }

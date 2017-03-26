@@ -1,23 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
 
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/topLayout"
-    android:orientation="vertical"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:keepScreenOn="true">
-
-  <com.steppschuh.mirrordashboard.camera.CameraSourcePreview
-      android:id="@+id/preview"
-      android:layout_width="match_parent"
-      android:layout_height="match_parent">
-
-    <com.steppschuh.mirrordashboard.camera.GraphicOverlay
-        android:id="@+id/faceOverlay"
+    <ImageView
+        android:id="@+id/cameraPreview"
+        android:scaleType="fitCenter"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-  </com.steppschuh.mirrordashboard.camera.CameraSourcePreview>
-
-</LinearLayout>
+</RelativeLayout>
