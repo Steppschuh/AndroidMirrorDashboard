@@ -294,7 +294,7 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
         if (photo.containsFace()) {
             Log.d(TAG, "Face detected in camera photo");
             onActivityDetected();
-            updateCameraPreviewImage(photo.getBitmap());
+            //updateCameraPreviewImage(photo.getBitmap());
         }
     }
 

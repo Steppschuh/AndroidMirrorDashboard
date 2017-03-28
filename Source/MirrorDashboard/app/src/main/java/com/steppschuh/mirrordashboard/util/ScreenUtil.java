@@ -94,7 +94,12 @@ public final class ScreenUtil {
         // adjust degrees, because manufacturers failed..
         if (Build.MODEL.equals("KFJWI")) {
             degrees = (degrees + 90) % 360;
+        } else if (Build.MODEL.equals("Pixel")) {
+            degrees = (degrees + 270) % 360;
         }
+
+        //Log.v(ScreenUtil.class.getSimpleName(), Build.MODEL + " degrees: " + degrees);
+
         return degrees;
     }
 
