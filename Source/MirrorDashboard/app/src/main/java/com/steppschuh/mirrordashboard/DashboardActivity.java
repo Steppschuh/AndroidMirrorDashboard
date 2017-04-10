@@ -224,8 +224,11 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
                 if (BitmapUtil.containsFace(previewBitmap)) {
                     Log.d(TAG, "Face detected in camera preview");
                     onActivityDetected();
+                    updateCameraPreviewImage(previewBitmap);
+                    cameraPreview.setVisibility(View.VISIBLE);
+                } else {
+                    cameraPreview.setVisibility(View.GONE);
                 }
-                //updateCameraPreviewImage(previewBitmap);
             }
         });
 
@@ -307,7 +310,6 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
         if (photo.containsFace()) {
             Log.d(TAG, "Face detected in camera photo");
             onActivityDetected();
-            //updateCameraPreviewImage(photo.getBitmap());
 
             if (System.currentTimeMillis() < lastFaceDetectedTimestamp + DETECTED_FACE_TIMEOUT) {
                 Log.d(TAG, "Ignoring face, last one was too recent");
@@ -315,13 +317,18 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
             }
 
             Log.v(TAG, "Uploading image of face");
-            UploadTask uploadTask = Storage.uploadImage(photo.getData());
+            lastFaceDetectedTimestamp = System.currentTimeMillis();
+
+            // track event
+            Analytics.faceDetected();
+
+            // upload image
+            Bitmap resizedImage = BitmapUtil.scale(photo.getBitmap(), 1000);
+            UploadTask uploadTask = Storage.uploadImage(BitmapUtil.createByteArray(resizedImage));
             uploadTask.addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
                 @Override
                 public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
-                    lastFaceDetectedTimestamp = System.currentTimeMillis();
                     Log.v(TAG, "Image of face uploaded");
-                    Analytics.faceDetected();
 
                     RequestHelper.getSlackWebhook().postMessage(SlackLog.getDefaultMessageBuilder()
                             .setText("Face detected")

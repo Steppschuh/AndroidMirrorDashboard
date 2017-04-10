@@ -108,7 +108,7 @@ public final class CameraHelper {
     }
 
     /*
-        Methods using the old android.hardware.face_dtection API
+        Methods using the old android.hardware.face_detection API
      */
 
     @SuppressWarnings("deprecation")
@@ -213,7 +213,7 @@ public final class CameraHelper {
     }
 
     /**
-     * Checks if the current device has a face_dtection.
+     * Checks if the current device has a face_detection.
      *
      * @param context
      * @return
@@ -223,7 +223,7 @@ public final class CameraHelper {
     }
 
     /**
-     * Checks if the the current device should use the new face_dtection API or the deprecated one.
+     * Checks if the the current device should use the new face_detection API or the deprecated one.
      * Because the deprecated API works more solid (even on current devices),
      * it will be used even though the newer API is available.
      *

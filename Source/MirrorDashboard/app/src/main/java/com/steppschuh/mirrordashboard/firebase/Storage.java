@@ -10,6 +10,11 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+
 /**
  * Created by Stephan on 4/9/2017.
  */
@@ -36,8 +41,18 @@ public final class Storage {
 
     public static UploadTask uploadImage(byte[] data) {
         StorageReference storageRef = getInstance().firebaseStorage.getReference();
-        StorageReference imagesRef = storageRef.child(PATH_IMAGES);
-        StorageReference imageRef = imagesRef.child(FILE_LATEST_IMAGE);
+        Date now = new Date();
+        Calendar calendar = new GregorianCalendar();
+        calendar.setTime(now);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+
+        String filePath = new StringBuilder(PATH_IMAGES).append("/")
+                .append(calendar.get(Calendar.YEAR)).append("/")
+                .append(calendar.get(Calendar.MONTH) + 1).append("/")
+                .append(calendar.get(Calendar.DAY_OF_MONTH)).append("/")
+                .append("image_").append(dateFormat.format(now)).append(".jpg")
+                .toString();
+        StorageReference imageRef = storageRef.child(filePath);
 
         UploadTask uploadTask = imageRef.putBytes(data);
         uploadTask.addOnFailureListener(new OnFailureListener() {
