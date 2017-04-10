@@ -2,6 +2,7 @@ package com.steppschuh.mirrordashboard.util;
 
 import android.content.Context;
 import android.os.Build;
+import android.util.Log;
 import android.view.Display;
 import android.view.Surface;
 import android.view.Window;
@@ -95,6 +96,8 @@ public final class ScreenUtil {
         if (Build.MODEL.equals("KFJWI")) {
             degrees = (degrees + 90) % 360;
         } else if (Build.MODEL.equals("Pixel")) {
+            degrees = (degrees + 270) % 360;
+        } else if (Build.MODEL.equals("Nexus 9")) {
             degrees = (degrees + 270) % 360;
         }
 

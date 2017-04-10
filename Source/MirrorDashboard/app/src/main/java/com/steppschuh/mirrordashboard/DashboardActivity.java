@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -15,6 +16,9 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.storage.UploadTask;
 import com.steppschuh.mirrordashboard.camera.CameraHelper;
 import com.steppschuh.mirrordashboard.camera.CameraPreviewUpdatedListener;
 import com.steppschuh.mirrordashboard.content.Content;
@@ -32,13 +36,18 @@ import com.steppschuh.mirrordashboard.content.transit.TransitListAdapter;
 import com.steppschuh.mirrordashboard.content.transit.Transits;
 import com.steppschuh.mirrordashboard.content.weather.Weather;
 import com.steppschuh.mirrordashboard.content.weather.YahooWeather;
+import com.steppschuh.mirrordashboard.firebase.Analytics;
+import com.steppschuh.mirrordashboard.firebase.Storage;
 import com.steppschuh.mirrordashboard.pattern.Pattern;
 import com.steppschuh.mirrordashboard.pattern.PatternManager;
 import com.steppschuh.mirrordashboard.pattern.PatternMatchedListener;
 import com.steppschuh.mirrordashboard.pattern.recorder.audio.AudioPatternRecorder;
+import com.steppschuh.mirrordashboard.request.RequestHelper;
 import com.steppschuh.mirrordashboard.request.SlackLog;
 import com.steppschuh.mirrordashboard.util.BitmapUtil;
 import com.steppschuh.mirrordashboard.util.ScreenUtil;
+
+import net.steppschuh.slackmessagebuilder.message.attachment.AttachmentBuilder;
 
 import java.util.concurrent.TimeUnit;
 
@@ -47,6 +56,7 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
     private static final String TAG = DashboardActivity.class.getSimpleName();
     private static final long SCREEN_REFRESH_INTERVAL = TimeUnit.SECONDS.toMillis(30);
     private static final long DETECTED_ACTIVITY_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
+    private static final long DETECTED_FACE_TIMEOUT = TimeUnit.SECONDS.toMillis(30);
 
     private static final int PERMISSION_REQUEST = 1;
 
@@ -73,11 +83,14 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
     private Pattern fromUsualToUnusualPattern;
     private Pattern fromUnusualToUsualPattern;
     private long lastActivityTimestamp;
+    private long lastFaceDetectedTimestamp;
 
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
         setContentView(R.layout.dashboard);
+
+        Analytics.initialize(this);
 
         setupUi();
         setupContent();
@@ -295,6 +308,30 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
             Log.d(TAG, "Face detected in camera photo");
             onActivityDetected();
             //updateCameraPreviewImage(photo.getBitmap());
+
+            if (System.currentTimeMillis() < lastFaceDetectedTimestamp + DETECTED_FACE_TIMEOUT) {
+                Log.d(TAG, "Ignoring face, last one was too recent");
+                return;
+            }
+
+            Log.v(TAG, "Uploading image of face");
+            UploadTask uploadTask = Storage.uploadImage(photo.getData());
+            uploadTask.addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
+                    lastFaceDetectedTimestamp = System.currentTimeMillis();
+                    Log.v(TAG, "Image of face uploaded");
+                    Analytics.faceDetected();
+
+                    RequestHelper.getSlackWebhook().postMessage(SlackLog.getDefaultMessageBuilder()
+                            .setText("Face detected")
+                            .addAttachment(new AttachmentBuilder()
+                                    .setImageUrl(task.getResult().getDownloadUrl().toString())
+                                    .build())
+                            .build());
+                }
+            });
+
         }
     }
 
