@@ -18,6 +18,7 @@ import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.storage.StorageException;
 import com.google.firebase.storage.UploadTask;
 import com.steppschuh.mirrordashboard.camera.CameraHelper;
 import com.steppschuh.mirrordashboard.camera.CameraPreviewUpdatedListener;
@@ -310,35 +311,7 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
         if (photo.containsFace()) {
             Log.d(TAG, "Face detected in camera photo");
             onActivityDetected();
-
-            if (System.currentTimeMillis() < lastFaceDetectedTimestamp + DETECTED_FACE_TIMEOUT) {
-                Log.d(TAG, "Ignoring face, last one was too recent");
-                return;
-            }
-
-            Log.v(TAG, "Uploading image of face");
-            lastFaceDetectedTimestamp = System.currentTimeMillis();
-
-            // track event
-            Analytics.faceDetected();
-
-            // upload image
-            Bitmap resizedImage = BitmapUtil.scale(photo.getBitmap(), 1000);
-            UploadTask uploadTask = Storage.uploadImage(BitmapUtil.createByteArray(resizedImage));
-            uploadTask.addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
-                @Override
-                public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
-                    Log.v(TAG, "Image of face uploaded");
-
-                    RequestHelper.getSlackWebhook().postMessage(SlackLog.getDefaultMessageBuilder()
-                            .setText("Face detected")
-                            .addAttachment(new AttachmentBuilder()
-                                    .setImageUrl(task.getResult().getDownloadUrl().toString())
-                                    .build())
-                            .build());
-                }
-            });
-
+            onFaceDetected(photo);
         }
     }
 
@@ -354,6 +327,39 @@ public class DashboardActivity extends AppCompatActivity implements ContentUpdat
     private void onActivityDetected() {
         lastActivityTimestamp = System.currentTimeMillis();
         refreshScreen();
+    }
+
+    private void onFaceDetected(Photo photo) {
+        if (System.currentTimeMillis() < lastFaceDetectedTimestamp + DETECTED_FACE_TIMEOUT) {
+            Log.d(TAG, "Ignoring face, last one was too recent");
+            return;
+        }
+
+        Log.v(TAG, "Uploading image of face");
+        lastFaceDetectedTimestamp = System.currentTimeMillis();
+
+        // track event
+        Analytics.faceDetected();
+
+        // upload image
+        Bitmap resizedImage = BitmapUtil.scale(photo.getBitmap(), 1000);
+        UploadTask uploadTask = Storage.uploadImage(BitmapUtil.createByteArray(resizedImage));
+        uploadTask.addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
+                try {
+                    Log.v(TAG, "Image of face uploaded");
+                    RequestHelper.getSlackWebhook().postMessage(SlackLog.getDefaultMessageBuilder()
+                            .setText("Face detected")
+                            .addAttachment(new AttachmentBuilder()
+                                    .setImageUrl(task.getResult().getDownloadUrl().toString())
+                                    .build())
+                            .build());
+                } catch (Exception e) {
+                    Log.w(TAG, "Unable to upload image", e);
+                }
+            }
+        });
     }
 
     /**

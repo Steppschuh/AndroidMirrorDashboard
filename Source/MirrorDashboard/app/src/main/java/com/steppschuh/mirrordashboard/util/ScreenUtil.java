@@ -99,6 +99,8 @@ public final class ScreenUtil {
             degrees = (degrees + 270) % 360;
         } else if (Build.MODEL.equals("Nexus 9")) {
             degrees = (degrees + 270) % 360;
+        } else if (Build.MODEL.equals("Nexus 5X")) {
+            degrees = (degrees + 270) % 360;
         }
 
         //Log.v(ScreenUtil.class.getSimpleName(), Build.MODEL + " degrees: " + degrees);
